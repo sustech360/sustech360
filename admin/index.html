@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13212E">
+<meta name="robots" content="noindex, nofollow">
+<title>Control centre</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div id="login" class="login">
+  <h2>Sign in</h2>
+  <div class="card">
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <label for="mfa">Authentication code <span class="hint">(if enabled)</span></label>
+    <input id="mfa" inputmode="numeric" autocomplete="one-time-code">
+    <div class="rowbtns"><button class="act" id="signin" type="button">Sign in</button></div>
+    <div id="loginmsg"></div>
+  </div>
+</div>
+
+<div id="app" class="layout hidden">
+  <aside class="rail">
+    <h1>Control centre</h1>
+    <div class="env" id="env"></div>
+    <nav>
+      <button data-view="dashboard" class="is-active">Dashboard</button>
+      <button data-view="queue">Queue</button>
+      <button data-view="reviews">Your reviews</button>
+      <button data-view="users">Users</button>
+      <button data-view="invitations">Author invitations</button>
+      <button data-view="roles">Roles</button>
+      <button data-view="menus">Navigation</button>
+      <button data-view="homepage">Homepage</button>
+      <button data-view="sections">Sections and flags</button>
+      <button data-view="appearance">Brand</button>
+      <button data-view="advertising">Advertising</button>
+      <button data-view="newsletter">Newsletter</button>
+      <button data-view="social">Social queue</button>
+      <button data-view="issues">Magazine issues</button>
+      <button data-view="delegation">Delegated access</button>
+      <button data-view="guidelines">Guidelines</button>
+      <button data-view="rulebook">Formats and rules</button>
+      <button data-view="billing">Billing</button>
+      <button data-view="performance">Performance</button>
+      <button data-view="audit">Audit log</button>
+      <button data-view="publish">Publish</button>
+      <button data-view="account">Account</button>
+    </nav>
+    <div class="rowbtns"><button class="ghost" id="signout" type="button">Sign out</button></div>
+  </aside>
+  <main id="view"></main>
+</div>
+
+<script src="config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="editorial.js"></script>
+<script src="rulebook.js"></script>
+<script src="siteadmin.js"></script>
+<script src="ads-admin.js"></script>
+<script src="comms.js"></script>
+<script src="issues-admin.js"></script>
+<script src="performance.js"></script>
+<script src="billing.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

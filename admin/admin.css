@@ -1,0 +1,111 @@
+/* Control centre — deliberately not the reading experience. Dense, sans-serif,
+   high information rate, dangerous actions visually separated. */
+:root {
+  --bg: #0E1519; --panel: #151E24; --line: #24313A; --text: #E6EAEC;
+  --dim: #8FA0AB; --accent: #3DBF9E; --warn: #E0A13C; --danger: #D96B5A;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+a { color: var(--accent); }
+.layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; } .rail { position: static; } }
+
+.rail { background: var(--panel); border-right: 1px solid var(--line); padding: 1rem; }
+.rail h1 { font-size: 1rem; margin: 0 0 .25rem; letter-spacing: .01em; }
+.rail .env { font-size: .75rem; color: var(--warn); margin-bottom: 1.25rem; }
+.rail nav { display: grid; gap: .1rem; }
+.rail button {
+  text-align: left; background: none; border: 0; color: var(--dim);
+  padding: .45rem .5rem; border-radius: 3px; cursor: pointer; font: inherit;
+}
+.rail button:hover { background: #1D2A33; color: var(--text); }
+.rail button.is-active { background: #1D2A33; color: var(--text); box-shadow: inset 2px 0 0 var(--accent); }
+
+main { padding: 1.5rem; max-width: 1000px; }
+h2 { font-size: 1.1rem; margin: 0 0 1rem; font-weight: 600; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1rem; margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: .5rem .4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--dim); font-weight: 600; }
+code { color: var(--accent); font-size: 12px; }
+
+input, select {
+  background: #0F171C; border: 1px solid var(--line); color: var(--text);
+  padding: .5rem .6rem; border-radius: 3px; font: inherit; width: 100%;
+}
+label { display: block; font-size: 12px; color: var(--dim); margin: .6rem 0 .25rem; }
+button.act {
+  background: var(--accent); color: #06231C; border: 0; padding: .5rem .9rem;
+  border-radius: 3px; font: inherit; font-weight: 600; cursor: pointer;
+}
+button.ghost { background: none; border: 1px solid var(--line); color: var(--text); }
+button.danger { background: none; border: 1px solid var(--danger); color: var(--danger); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+.msg { padding: .6rem .8rem; border-radius: 3px; margin: .75rem 0; font-size: 13px; }
+.msg.err { background: #2A1714; border: 1px solid var(--danger); color: #F0B6AC; }
+.msg.ok { background: #10241E; border: 1px solid var(--accent); }
+.login { max-width: 360px; margin: 12vh auto; }
+.hidden { display: none; }
+.rowbtns { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: 1rem; }
+.hint { color: var(--dim); font-size: 12px; }
+
+/* ============================================================
+   Devices
+   ============================================================
+   The specification asks for a control centre that works on a phone,
+   and an editor approving something from a train is the normal case
+   rather than the exception. Three things were wrong on a narrow
+   screen and are fixed here. */
+
+/* 1. Twenty-two navigation buttons stacked vertically meant scrolling
+      past the whole menu to reach any content. On a phone the rail
+      becomes a strip that scrolls sideways and stays at the top. */
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; min-height: 100dvh; }
+  .rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: .75rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding-top: max(.75rem, env(safe-area-inset-top));
+  }
+  .rail h1 { display: inline-block; margin: 0 .75rem 0 0; }
+  .rail .env { display: inline-block; margin: 0; }
+  .rail nav {
+    display: flex;
+    gap: .35rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-top: .6rem;
+    padding-bottom: .2rem;
+  }
+  .rail nav::-webkit-scrollbar { display: none; }
+  .rail button { white-space: nowrap; padding: .5rem .7rem; }
+  main { padding: 1rem; }
+}
+
+/* 2. A six-column table of invoices dragged the entire page sideways.
+      Each table now scrolls within its card. */
+.card table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.card table th, .card table td { white-space: nowrap; }
+.card table td .hint, .card table td span { white-space: normal; }
+
+/* 3. Tapping any field zoomed the page on iOS, because the font was
+      14px. Sixteen is the threshold; it applies only where the
+      pointer is a finger, so the desktop density is unchanged. */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px; min-height: 44px; }
+  button, .rail button { min-height: 44px; }
+  textarea { min-height: 8rem; }
+}
+
+.layout { min-height: 100vh; min-height: 100dvh; }  /* dvh: iOS URL bar */
+main { max-width: 1000px; width: 100%; }
+@media (min-width: 1500px) { main { max-width: 1240px; } }
