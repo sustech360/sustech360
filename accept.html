@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13212E">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Accept your invitation</title>
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+  .accept { max-width: 34rem; margin: 3rem auto 5rem; }
+  .accept .field { margin: 0 0 1rem; }
+  .accept label { display: block; font-family: var(--sans); font-size: .8125rem; color: var(--muted); margin-bottom: .3rem; }
+  .accept input { width: 100%; font: inherit; font-family: var(--sans); padding: .6rem .7rem;
+                  border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 2px; }
+  .accept .panel { border-top: 2px solid var(--ink); padding-top: 1rem; margin-bottom: 2rem; }
+  .accept dl { display: grid; grid-template-columns: 9rem 1fr; gap: .35rem 1rem; font-family: var(--sans); font-size: .875rem; margin: 0; }
+  .accept dt { color: var(--muted); }
+  .accept .msg { font-family: var(--sans); font-size: .9375rem; padding: .7rem .9rem; border-left: 3px solid var(--accent); background: var(--surface); margin: 1rem 0; }
+  .accept .msg.err { border-left-color: #B4441F; }
+</style>
+</head>
+<body data-page="accept">
+<header class="masthead">
+  <div class="shell"><div class="masthead__top"><a class="wordmark" href="./"><span data-brand>Magazine</span></a></div></div>
+</header>
+
+<main class="shell accept">
+  <div id="state"><p class="empty">Checking your invitation…</p></div>
+</main>
+
+<footer class="footer"><div class="shell"><p>&copy; <span data-year></span> <span data-brand>Magazine</span></p></div></footer>
+<script src="assets/js/api.js"></script>
+<script src="admin/config.js"></script>
+<script src="assets/js/site.js" defer></script>
+<script src="assets/js/accept.js" defer></script>
+</body>
+</html>

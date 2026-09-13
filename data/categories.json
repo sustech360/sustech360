@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "categories": [
+    { "slug": "energy", "name": "Energy", "parent": null, "description": "Generation, conversion, storage and delivery." },
+    { "slug": "energy-storage", "name": "Energy storage", "parent": "energy", "description": "Batteries, capacitors and thermal storage." },
+    { "slug": "renewable-energy", "name": "Renewable energy", "parent": "energy", "description": "Solar, wind, hydro, geothermal, ocean." },
+    { "slug": "sustainability", "name": "Sustainability", "parent": null, "description": "Circular economy, climate, resources." },
+    { "slug": "materials", "name": "Materials", "parent": null, "description": "The substances that set the limits." },
+    { "slug": "research", "name": "Research", "parent": null, "description": "What the literature is showing now." },
+    { "slug": "policy", "name": "Policy", "parent": null, "description": "Regulation, incentives, standards." }
+  ],
+  "topics": [
+    { "slug": "sodium-ion", "name": "Sodium-ion", "category": "energy-storage" },
+    { "slug": "hard-carbon", "name": "Hard carbon", "category": "materials" },
+    { "slug": "solid-state", "name": "Solid-state batteries", "category": "energy-storage" },
+    { "slug": "hydrogen", "name": "Hydrogen", "category": "energy" }
+  ]
+}

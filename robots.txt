@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /author/
+Sitemap: https://sustech360.com/sitemap.xml

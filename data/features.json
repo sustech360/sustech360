@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "flags": {
+    "ADVERTISING": { "state": "disabled" },
+    "NEWSLETTER": { "state": "enabled" },
+    "COMMENTS": { "state": "disabled" },
+    "PDF": { "state": "disabled" },
+    "SOCIAL": { "state": "enabled" },
+    "JOBS": { "state": "disabled" },
+    "EVENTS": { "state": "disabled" },
+    "MEMBERSHIP": { "state": "disabled" },
+    "AUTHOR_REGISTRATION": { "state": "disabled", "locked": true, "note": "Invitation-only by policy. Cannot be enabled." }
+  }
+}

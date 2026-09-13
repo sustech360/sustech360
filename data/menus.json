@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "primary": [
+    {
+      "id": "m-energy",
+      "name": "Energy",
+      "url": "category.html?c=energy",
+      "parent": null,
+      "order": 1,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "m-storage",
+      "name": "Energy storage",
+      "url": "category.html?c=energy-storage",
+      "parent": "m-energy",
+      "order": 1,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "m-renew",
+      "name": "Renewables",
+      "url": "category.html?c=renewable-energy",
+      "parent": "m-energy",
+      "order": 2,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "m-sust",
+      "name": "Sustainability",
+      "url": "category.html?c=sustainability",
+      "parent": null,
+      "order": 2,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "m-mat",
+      "name": "Materials",
+      "url": "category.html?c=materials",
+      "parent": null,
+      "order": 3,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "m-res",
+      "name": "Research",
+      "url": "category.html?c=research",
+      "parent": null,
+      "order": 4,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "m-pol",
+      "name": "Policy",
+      "url": "category.html?c=policy",
+      "parent": null,
+      "order": 5,
+      "status": "PAUSED"
+    },
+    {
+      "id": "m-about",
+      "name": "About",
+      "url": "about.html",
+      "parent": null,
+      "order": 6,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "m-issues",
+      "name": "Issues",
+      "url": "issues.html",
+      "parent": null,
+      "order": 7,
+      "status": "ACTIVE"
+    }
+  ],
+  "footer": [
+    {
+      "id": "f-guide",
+      "name": "Author guidelines",
+      "url": "guidelines.html",
+      "order": 1,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "f-policy",
+      "name": "Editorial policy",
+      "url": "guidelines.html#g-review",
+      "order": 2,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "f-privacy",
+      "name": "Privacy",
+      "url": "privacy.html",
+      "order": 3,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "f-rss",
+      "name": "RSS",
+      "url": "rss/feed.xml",
+      "order": 4,
+      "status": "ACTIVE"
+    }
+  ]
+}

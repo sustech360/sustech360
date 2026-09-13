@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "id": "lead",
+      "type": "hero",
+      "active": true,
+      "order": 1,
+      "title": "",
+      "source": "manual",
+      "items": [
+        "sodium-ion-hard-carbon-anodes"
+      ],
+      "layout": "lead"
+    },
+    {
+      "id": "ad-top",
+      "type": "ad",
+      "active": true,
+      "order": 2,
+      "placement": "HOME_TOP"
+    },
+    {
+      "id": "latest",
+      "type": "list",
+      "active": true,
+      "order": 3,
+      "title": "Latest",
+      "source": "latest",
+      "count": 6,
+      "layout": "rows"
+    },
+    {
+      "id": "storage",
+      "type": "list",
+      "active": true,
+      "order": 4,
+      "title": "Energy storage",
+      "source": "category:energy-storage",
+      "count": 4,
+      "layout": "grid"
+    },
+    {
+      "id": "research",
+      "type": "list",
+      "active": true,
+      "order": 5,
+      "title": "Research highlights",
+      "source": "format:research-highlight",
+      "count": 3,
+      "layout": "rows"
+    },
+    {
+      "id": "newsletter",
+      "type": "newsletter",
+      "active": true,
+      "order": 6,
+      "title": "The weekly brief"
+    }
+  ]
+}

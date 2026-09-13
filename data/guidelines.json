@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "generated_at": "2026-09-10T00:00:00Z",
+  "documents": [
+    {
+      "kind": "AUTHOR",
+      "name": "Author guidelines",
+      "title": "Author guidelines v1.0",
+      "version": "1.0",
+      "published_at": "2026-09-10T00:00:00Z",
+      "body": "Who writes here\nContribution is by invitation. Your invitation named a section and a format; write to those.\n\nOriginality\nThe article must be yours and unpublished elsewhere. Reusing your own earlier work is fine if you say so.\n\nEvidence\nEvery claim that a reader might reasonably doubt needs a source. Reference primary literature, not press releases.\n\nFigures\nSupply the figure, a caption, a credit and a licence. If you cannot state the licence, we cannot publish the image.\n\nDeclarations\nDeclare funding, commercial interests, and any use of AI tools beyond spelling and grammar.\n\nEditing\nWe edit for clarity and house style, and send substantive changes back to you before publication.\n\nAfter publication\nPublished articles are not edited in place. Corrections create a new version, and the record shows what changed."
+    }
+  ]
+}

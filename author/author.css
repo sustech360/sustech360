@@ -1,0 +1,113 @@
+/* Author portal — a writing surface, not a dashboard. Light, quiet, serif where
+   the author's own words appear, sans for anything the interface says. */
+:root {
+  --paper: #FCFCFA; --ink: #13212E; --muted: #5A6670; --rule: #D9D6CE;
+  --accent: #1F6F5C; --warn: #8A6A1F; --danger: #A2402C; --surface: #F4F3EF;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif: Charter, "Iowan Old Style", "Source Serif 4", Georgia, serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.55 var(--sans); }
+a { color: var(--accent); }
+
+.top { border-bottom: 1px solid var(--rule); }
+.top .bar { max-width: 1080px; margin: 0 auto; padding: .9rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.brand { font-family: var(--serif); font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em; }
+.brand small { font-family: var(--sans); font-size: .75rem; font-weight: 400; color: var(--muted); display: block; }
+
+.tabs { max-width: 1080px; margin: 0 auto; padding: 0 1.25rem; display: flex; gap: 1.25rem; flex-wrap: wrap; border-top: 1px solid var(--rule); }
+.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: .6rem 0; font: inherit; color: var(--muted); cursor: pointer; }
+.tabs button.is-active { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs .badge { background: var(--accent); color: #fff; border-radius: 9px; font-size: .6875rem; padding: 0 .35rem; margin-left: .3rem; }
+
+main { max-width: 1080px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+h1 { font-family: var(--serif); font-size: 1.6rem; letter-spacing: -.02em; margin: 0 0 1rem; }
+h2 { font-size: 1.05rem; margin: 1.75rem 0 .6rem; }
+.hint { color: var(--muted); font-size: .8125rem; }
+
+.panel { border-top: 2px solid var(--ink); padding-top: .9rem; margin-bottom: 1.75rem; }
+.list { border-top: 1px solid var(--rule); }
+.item { border-bottom: 1px solid var(--rule); padding: .85rem 0; display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; }
+.item h3 { font-family: var(--serif); font-size: 1.1rem; margin: 0 0 .2rem; font-weight: 600; }
+
+.status { font-size: .75rem; border: 1px solid var(--rule); padding: .1rem .4rem; border-radius: 2px; color: var(--muted); white-space: nowrap; }
+.status[data-s="DRAFT"] { border-color: var(--rule); }
+.status[data-s="SUBMITTED"], .status[data-s="RESUBMITTED"] { border-color: var(--accent); color: var(--accent); }
+.status[data-s="REVISION_REQUIRED"] { border-color: var(--warn); color: var(--warn); }
+.status[data-s="PUBLISHED"] { border-color: var(--ink); color: var(--ink); }
+.status[data-s="REJECTED"] { border-color: var(--danger); color: var(--danger); }
+
+label { display: block; font-size: .8125rem; color: var(--muted); margin: .9rem 0 .3rem; }
+input, select, textarea {
+  width: 100%; font: inherit; padding: .55rem .65rem; border: 1px solid var(--rule);
+  background: var(--paper); color: var(--ink); border-radius: 2px;
+}
+textarea { font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; min-height: 9rem; resize: vertical; }
+.row { display: flex; gap: .75rem; flex-wrap: wrap; }
+.row > * { flex: 1 1 12rem; }
+
+button.act { background: var(--accent); border: 1px solid var(--accent); color: #fff; padding: .5rem .9rem; border-radius: 2px; font: inherit; cursor: pointer; }
+button.ghost { background: none; border: 1px solid var(--rule); color: var(--ink); padding: .5rem .9rem; border-radius: 2px; font: inherit; cursor: pointer; }
+button.link { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.btnrow { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1.25rem; }
+
+.msg { font-size: .9375rem; padding: .7rem .9rem; border-left: 3px solid var(--accent); background: var(--surface); margin: 1rem 0; }
+.msg.err { border-left-color: var(--danger); }
+.msg ul { margin: .4rem 0 0; padding-left: 1.1rem; }
+
+.savebar { position: sticky; top: 0; background: var(--paper); border-bottom: 1px solid var(--rule); padding: .6rem 0; display: flex; justify-content: space-between; gap: 1rem; align-items: center; font-size: .8125rem; color: var(--muted); z-index: 5; }
+.check { display: flex; gap: .55rem; align-items: flex-start; margin: .5rem 0; }
+.check input { width: auto; margin-top: .25rem; }
+.check label { margin: 0; color: var(--ink); font-size: .9375rem; }
+.hidden { display: none; }
+.login { max-width: 22rem; margin: 12vh auto; }
+.guidelines { white-space: pre-wrap; font-family: var(--serif); font-size: 1.0625rem; line-height: 1.65; max-width: 60ch; }
+.notif { border-bottom: 1px solid var(--rule); padding: .75rem 0; }
+.notif.unread h3::before { content: ""; display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: .45rem; vertical-align: middle; }
+.notif h3 { font-size: .95rem; margin: 0 0 .2rem; }
+
+/* ============================================================
+   Devices
+   ============================================================
+   Authors write on whatever they have. The editor is the one screen
+   in this platform most likely to be used on a phone — a paragraph
+   fixed on the way somewhere — so it has to work there. */
+
+.top .bar, .tabs, main { width: 100%; }
+.top .bar, .tabs { padding-left: max(1.25rem, env(safe-area-inset-left)); padding-right: max(1.25rem, env(safe-area-inset-right)); }
+
+@media (max-width: 720px) {
+  /* The tab row scrolls rather than wrapping into three lines. */
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 1rem;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { white-space: nowrap; }
+  main { padding: 1.25rem 1rem 3rem; }
+  .top .bar { padding: .75rem 1rem; flex-wrap: wrap; }
+  h1 { font-size: 1.35rem; }
+  /* The save bar is the one thing that must stay visible while typing. */
+  .savebar { top: 0; padding: .5rem 0; }
+}
+
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px; }
+  input, select, button { min-height: 44px; }
+  textarea { min-height: 10rem; line-height: 1.6; }
+  .check input[type="checkbox"] { width: 22px; height: 22px; }
+}
+
+/* A wide table inside the portal scrolls within itself. */
+table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (min-width: 1500px) { .top .bar, .tabs, main { max-width: 1240px; } }
+
+@media (display-mode: standalone) {
+  .top { padding-top: env(safe-area-inset-top); }
+  main { padding-bottom: calc(3rem + env(safe-area-inset-bottom)); }
+}

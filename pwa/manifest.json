@@ -1,0 +1,23 @@
+{
+  "name": "Sustainable Science, Technology and Solutions 360",
+  "short_name": "SusTech360",
+  "start_url": "../index.html",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#FCFCFA",
+  "theme_color": "#13212E",
+  "icons": [
+    {
+      "src": "../assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "description": "Research, technology and policy for the energy transition."
+}

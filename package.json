@@ -1,0 +1,14 @@
+{
+  "name": "magazine-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static magazine site with a permissioned Google Apps Script backend",
+  "scripts": {
+    "test": "for f in tests/phase*.js; do node $f || exit 1; done",
+    "test:contract": "node tests/contract.js",
+    "test:all": "npm test && npm run test:contract"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}

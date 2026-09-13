@@ -1,0 +1,381 @@
+/* Vector — public site. Tokens are overridden at runtime from data/settings.json
+   so the Appearance Control Centre can restyle the site without a code change. */
+
+:root {
+  --paper: #FCFCFA;
+  --ink: #13212E;
+  --muted: #5A6670;
+  --rule: #D9D6CE;
+  --accent: #1F6F5C;
+  --sponsor: #8A6A1F;
+  --surface: #F4F3EF;
+
+  --serif: Charter, "Iowan Old Style", "Source Serif 4", "Palatino Linotype", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --measure: 66ch;
+  --gap: 1.5rem;
+  --shell: 1180px;
+}
+
+[data-theme="dark"] {
+  --paper: #10161B;
+  --ink: #E8E6E0;
+  --muted: #9AA5AE;
+  --rule: #2A343C;
+  --accent: #5FC0A6;
+  --surface: #161E25;
+}
+
+[data-theme="sepia"] {
+  --paper: #F6EEE0;
+  --ink: #3A2E22;
+  --muted: #6E5C48;
+  --rule: #DFD0B8;
+  --accent: #1F6F5C;
+  --surface: #EFE4D2;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.shell { max-width: var(--shell); margin: 0 auto; padding: 0 1.25rem; }
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 1rem; top: 1rem; background: var(--paper); padding: .5rem .75rem; z-index: 50; }
+
+/* ---------- masthead ---------- */
+
+.masthead { border-bottom: 1px solid var(--rule); }
+.masthead__top {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; padding: 1.25rem 0 .9rem;
+}
+.wordmark { font-size: 1.75rem; letter-spacing: -.02em; font-weight: 700; }
+.wordmark span { color: var(--accent); }
+.wordmark__logo { height: 38px; width: auto; display: block; }
+@media (max-width: 560px) { .wordmark__logo { height: 30px; } }
+.tagline { font-family: var(--sans); font-size: .8125rem; color: var(--muted); }
+
+.nav { border-top: 1px solid var(--rule); }
+.nav ul { display: flex; flex-wrap: wrap; gap: 1.4rem; list-style: none; margin: 0; padding: .6rem 0; }
+.nav a {
+  font-family: var(--sans); font-size: .9375rem; padding: .2rem 0;
+  border-bottom: 2px solid transparent;
+}
+.nav a:hover { text-decoration: none; border-bottom-color: var(--accent); }
+.nav li.sub a { color: var(--muted); font-size: .875rem; }
+
+.utility { display: flex; gap: .75rem; align-items: center; font-family: var(--sans); font-size: .875rem; }
+.btn {
+  font-family: var(--sans); font-size: .875rem; border: 1px solid var(--rule);
+  background: transparent; color: var(--ink); padding: .35rem .7rem; border-radius: 2px; cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }
+.btn--solid { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ---------- section headings: a measurement tick, not an eyebrow ---------- */
+
+.section { padding: 2.5rem 0; border-top: 1px solid var(--rule); }
+.section__head { display: flex; align-items: baseline; gap: .75rem; margin: 0 0 1.25rem; }
+.section__head h2 {
+  font-size: 1.25rem; margin: 0; font-weight: 600; letter-spacing: -.01em;
+}
+.section__head h2::before {
+  content: ""; display: inline-block; width: 3px; height: .85em;
+  background: var(--accent); margin-right: .55rem; vertical-align: -.05em;
+}
+
+/* ---------- lead ---------- */
+
+.lead { padding: 2.25rem 0 2.5rem; }
+.lead h1 {
+  font-size: clamp(2rem, 6vw, 3.25rem); line-height: 1.08; letter-spacing: -.025em;
+  margin: 0 0 .75rem; max-width: 20ch; font-weight: 700;
+}
+.lead .standfirst { font-size: 1.25rem; color: var(--muted); max-width: 52ch; margin: 0 0 1rem; }
+
+.meta { font-family: var(--sans); font-size: .8125rem; color: var(--muted); }
+.meta .by { color: var(--ink); }
+.meta span + span { margin-left: 1rem; }
+
+/* ---------- article lists ---------- */
+
+.rows { display: grid; gap: 0; }
+.rows .card { border-top: 1px solid var(--rule); padding: 1.15rem 0; }
+.rows .card:first-child { border-top: 0; padding-top: 0; }
+
+.grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.grid .card { border-top: 2px solid var(--ink); padding-top: .85rem; }
+
+.card h3 { margin: 0 0 .35rem; font-size: 1.15rem; line-height: 1.25; font-weight: 600; letter-spacing: -.012em; }
+.card p { margin: 0 0 .5rem; color: var(--muted); font-size: .9375rem; }
+.card .kicker { font-family: var(--sans); font-size: .78125rem; color: var(--accent); display: block; margin-bottom: .3rem; }
+
+.level { font-family: var(--sans); font-size: .75rem; border: 1px solid var(--rule); padding: .05rem .35rem; border-radius: 2px; color: var(--muted); }
+
+/* ---------- ads: collapse to nothing when unfilled ---------- */
+
+.adslot { display: none; }
+.adslot.is-filled { display: block; margin: 2rem 0; padding: 1rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.adslot__label { font-family: var(--sans); font-size: .6875rem; color: var(--sponsor); letter-spacing: .04em; margin-bottom: .5rem; }
+
+/* ---------- article page ---------- */
+
+.progress { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); width: 0; z-index: 40; }
+
+.article { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.5rem; padding: 2rem 0 3rem; }
+@media (min-width: 960px) {
+  .article { grid-template-columns: 200px minmax(0, 1fr); }
+  .article__aside { position: sticky; top: 1.5rem; align-self: start; }
+}
+
+.article__head h1 { font-size: clamp(1.9rem, 4.5vw, 2.75rem); line-height: 1.12; letter-spacing: -.022em; margin: .4rem 0 .6rem; }
+.article__head .standfirst { font-size: 1.2rem; color: var(--muted); margin: 0 0 1rem; max-width: 54ch; }
+
+.article__body { max-width: var(--measure); font-size: var(--reader-size, 1.0625rem); line-height: var(--reader-leading, 1.7); }
+.article__body h2 { font-size: 1.35rem; margin: 2.2rem 0 .6rem; letter-spacing: -.012em; }
+.article__body p { margin: 0 0 1.15rem; }
+.article__body figure { margin: 1.75rem 0; }
+.article__body figcaption { font-family: var(--sans); font-size: .8125rem; color: var(--muted); margin-top: .5rem; border-left: 2px solid var(--rule); padding-left: .7rem; }
+.article__body .figph { background: var(--surface); border: 1px solid var(--rule); aspect-ratio: 16/9; }
+.article__body ol.refs { font-family: var(--sans); font-size: .875rem; color: var(--muted); padding-left: 1.2rem; }
+.article__body ol.refs li { margin-bottom: .5rem; }
+
+.toc { font-family: var(--sans); font-size: .875rem; }
+.toc ul { list-style: none; margin: .5rem 0 0; padding: 0; }
+.toc li { margin: 0 0 .45rem; }
+.toc a { color: var(--muted); border-left: 2px solid var(--rule); padding-left: .6rem; display: block; }
+.toc a.is-active { color: var(--ink); border-left-color: var(--accent); }
+
+.reader-controls { font-family: var(--sans); font-size: .8125rem; margin-top: 1.75rem; display: grid; gap: .5rem; }
+.reader-controls .row { display: flex; gap: .35rem; align-items: center; }
+.reader-controls label { color: var(--muted); min-width: 4.5rem; }
+
+/* ---------- search ---------- */
+
+.searchbar { display: flex; gap: .5rem; margin: 1.5rem 0; }
+.searchbar input {
+  flex: 1; font: inherit; font-family: var(--sans); padding: .6rem .75rem;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 2px;
+}
+
+.empty { color: var(--muted); font-family: var(--sans); font-size: .9375rem; }
+
+/* ---------- newsletter ---------- */
+
+.newsletter { background: var(--surface); padding: 1.75rem; }
+.newsletter h2 { margin: 0 0 .4rem; font-size: 1.3rem; }
+.newsletter p { margin: 0 0 1rem; color: var(--muted); max-width: 48ch; }
+.newsletter form { display: flex; gap: .5rem; flex-wrap: wrap; }
+.newsletter input { font: inherit; font-family: var(--sans); padding: .55rem .7rem; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 2px; min-width: 240px; }
+
+/* ---------- footer ---------- */
+
+.footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding: 2rem 0 3rem; font-family: var(--sans); font-size: .875rem; color: var(--muted); }
+.footer ul { list-style: none; display: flex; flex-wrap: wrap; gap: 1.25rem; padding: 0; margin: 0 0 1rem; }
+
+/* ---------- states ---------- */
+
+.notice { font-family: var(--sans); font-size: .9375rem; border-left: 3px solid var(--accent); padding: .75rem 1rem; background: var(--surface); }
+.error-page { padding: 4rem 0; max-width: 46ch; }
+.error-page h1 { font-size: 2rem; letter-spacing: -.02em; margin: 0 0 .5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+@media print {
+  .masthead, .nav, .footer, .adslot, .article__aside, .progress, .utility { display: none !important; }
+  body { font-size: 11pt; color: #000; background: #fff; }
+  .article__body { max-width: none; }
+}
+
+/* ============================================================
+   Devices
+   ============================================================
+   Written after testing what the layout actually does at the sizes
+   people read on, rather than at the size it was designed on.
+
+   Three principles:
+     · the page uses the width it is given, with gutters that shrink
+       on a phone and a ceiling that rises on a large screen;
+     · nothing ever scrolls sideways — a table or a long URL scrolls
+       inside its own box, not by dragging the whole page;
+     · anything you tap is big enough to tap. */
+
+/* The shell takes the screen it is on. On a phone the gutters shrink
+   to 16px; on a large monitor the ceiling rises rather than leaving
+   the content marooned in the middle. The article body keeps its own
+   reading measure — a 40em line of prose is not an improvement. */
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 3.2vw, 2rem);
+  /* Notched phones in landscape: keep text out from under the cutout. */
+  padding-left: max(clamp(1rem, 3.2vw, 2rem), env(safe-area-inset-left));
+  padding-right: max(clamp(1rem, 3.2vw, 2rem), env(safe-area-inset-right));
+}
+
+@media (min-width: 1500px) { :root { --shell: 1360px; } }
+@media (min-width: 1800px) { :root { --shell: 1560px; } }
+
+/* Long words, URLs and chemical names must not widen the page. */
+body, .article__body, .card, .toc { overflow-wrap: anywhere; }
+.article__body a { word-break: break-word; }
+
+/* A wide table scrolls inside itself. Dragging the whole page sideways
+   to read a column is how a phone layout is lost. */
+.article__body table,
+.article__body .scroller { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.article__body table { border-collapse: collapse; }
+.article__body th, .article__body td { padding: .4rem .6rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+
+/* The section strip scrolls rather than stacking into four lines and
+   pushing the first headline below the fold. */
+@media (max-width: 720px) {
+  .nav ul {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 1.1rem;
+  }
+  .nav ul::-webkit-scrollbar { display: none; }
+  .nav a { white-space: nowrap; }
+  .masthead__top { padding: .9rem 0 .7rem; }
+  .lead { padding: 1.5rem 0 1.75rem; }
+  .section { padding: 1.75rem 0; }
+  .grid { gap: 1.25rem; }
+}
+
+/* Room for a thumb. 44px is the smallest target that is comfortable
+   on a phone, and it costs nothing on a desktop because this only
+   applies where the pointer is a finger. */
+@media (pointer: coarse) {
+  .btn, button, .nav a, .footer a, .utility a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .searchbar input, .newsletter input {
+    min-height: 44px;
+    font-size: 16px;          /* under 16px, iOS zooms the page on focus */
+  }
+}
+
+/* Very small phones: keep the lead headline from swallowing the screen. */
+@media (max-width: 380px) {
+  .lead h1 { font-size: 1.9rem; }
+  .article__head h1 { font-size: 1.7rem; }
+  .card h3 { font-size: 1.05rem; }
+}
+
+/* Landscape on a short screen — a phone turned sideways — should not
+   spend half its height on the masthead. */
+@media (max-height: 480px) and (orientation: landscape) {
+  .masthead__top { padding: .6rem 0 .4rem; }
+  .lead { padding: 1rem 0 1.25rem; }
+}
+
+/* Installed as an app: fill the screen, including behind the notch. */
+@media (display-mode: standalone) {
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  .masthead { padding-top: env(safe-area-inset-top); }
+}
+
+/* An advertisement that arrives after the text has been read for a second
+   must not shove the paragraph the reader is on. The slot claims its height
+   only once it is filled — an empty slot still collapses to nothing. */
+.adslot.is-filled { min-height: 120px; }
+.adslot.is-filled ins.adsbygoogle { display: block; width: 100%; }
+@media (min-width: 900px) { .adslot.is-filled { min-height: 180px; } }
+
+/* ============================================================
+   Side rails
+   ============================================================
+   An advertisement column either side of the page on a wide screen —
+   Google's or one you sold yourself, the chain decides per rail, so
+   the two can show different things at the same time.
+
+   Two rules make this safe rather than annoying:
+
+     · a rail that has nothing to show takes no space at all. The
+       three-column layout only exists once JavaScript confirms a rail
+       filled, so an unsold site is not a page with two grey columns.
+     · below 1200px there are no rails. Not shrunk, not stacked at the
+       bottom — absent. A phone has no room for a column beside the
+       text, and pretending otherwise is what makes sites scroll
+       sideways. Phones get the inline slots instead. */
+
+.frame { display: block; }
+.frame__rail { display: none; }
+
+@media (min-width: 1200px) {
+  .frame.has-rails {
+    display: grid;
+    grid-template-columns: 170px minmax(0, var(--shell)) 170px;
+    justify-content: center;
+    gap: clamp(1rem, 2vw, 2.5rem);
+    align-items: start;
+  }
+  .frame.has-rails .frame__rail { display: block; }
+  .frame.has-rails > .shell { padding-left: 0; padding-right: 0; }
+
+  .frame__rail .adslot.is-filled {
+    position: sticky;
+    top: 1.5rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-height: 0;
+  }
+  .frame__rail img { width: 100%; height: auto; }
+  .frame__rail .adslot__label { margin-bottom: .4rem; }
+}
+
+/* A wider screen can afford the 300px units advertisers actually sell. */
+@media (min-width: 1600px) {
+  .frame.has-rails { grid-template-columns: 300px minmax(0, var(--shell)) 300px; }
+}
+
+/* Only one rail sold? Keep the text centred rather than shunting the
+   whole page sideways to balance an advertisement. */
+@media (min-width: 1200px) {
+  .frame.has-rails.rail-left-only { grid-template-columns: 170px minmax(0, var(--shell)) 170px; }
+  .frame.has-rails.rail-right-only { grid-template-columns: 170px minmax(0, var(--shell)) 170px; }
+}
+
+/* ============================================================
+   Type that scales with the screen
+   ============================================================
+   Body text grows a little between a phone and a large monitor, so a
+   desktop reader is not looking at phone-sized text from further away.
+   Clamped at both ends: it never gets smaller than comfortable on a
+   phone, and never larger than sensible on a television. */
+body {
+  font-size: clamp(1rem, 0.97rem + 0.18vw, 1.125rem);
+}
+.article__body {
+  font-size: var(--reader-size, clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem));
+}

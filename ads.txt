@@ -1,0 +1,9 @@
+# ads.txt — who is allowed to sell advertising on sustech360.com
+#
+# Google checks this file. Without it, AdSense shows "Earnings at risk" and
+# some buyers will not bid at all.
+#
+# Replace pub-0000000000000000 with your own publisher id — the digits from
+# your ca-pub-... number — then commit this file. Nothing else is needed.
+#
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

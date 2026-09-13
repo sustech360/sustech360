@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13212E">
+<meta name="robots" content="noindex, nofollow">
+<title>Author portal</title>
+<link rel="stylesheet" href="author.css">
+</head>
+<body>
+
+<div id="login" class="login">
+  <h1>Author portal</h1>
+  <label for="email">Email</label>
+  <input id="email" type="email" autocomplete="username">
+  <label for="password">Password</label>
+  <input id="password" type="password" autocomplete="current-password">
+  <label for="mfa">Authentication code <span class="hint">(if enabled)</span></label>
+  <input id="mfa" inputmode="numeric" autocomplete="one-time-code">
+  <div class="btnrow"><button class="act" id="signin" type="button">Sign in</button></div>
+  <div id="loginmsg"></div>
+  <p class="hint">Accounts here are created from an invitation. If you have one, open the link in your email.</p>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="bar">
+      <div class="brand">Author portal<small id="who"></small></div>
+      <button class="ghost" id="signout" type="button">Sign out</button>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-view="dashboard" class="is-active">Dashboard</button>
+      <button data-view="articles">My articles</button>
+      <button data-view="new">New article</button>
+      <button data-view="guidelines">Guidelines</button>
+      <button data-view="profile">Profile</button>
+      <button data-view="notifications">Notifications<span class="badge hidden" id="nbadge">0</span></button>
+    </nav>
+  </header>
+  <main id="view"></main>
+</div>
+
+<script src="../admin/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="author.js"></script>
+</body>
+</html>

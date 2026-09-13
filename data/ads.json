@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "placements": {
+    "HOME_TOP": { "active": false, "chain": ["DIRECT", "ADSENSE", "HOUSE", "COLLAPSE"] },
+    "HOME_MIDDLE": { "active": false, "chain": ["DIRECT", "ADSENSE", "HOUSE", "COLLAPSE"] },
+    "ARTICLE_MIDDLE": { "active": false, "chain": ["DIRECT", "ADSENSE", "RELATED", "COLLAPSE"] },
+    "ARTICLE_SIDEBAR": { "active": false, "chain": ["DIRECT", "HOUSE", "COLLAPSE"] }
+  },
+  "creatives": [],
+  "house": []
+}
