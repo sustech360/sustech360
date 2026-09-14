@@ -2,14 +2,6 @@
   "version": 1,
   "primary": [
     {
-      "id": "m-energy",
-      "name": "Energy",
-      "url": "category.html?c=energy",
-      "parent": null,
-      "order": 1,
-      "status": "ACTIVE"
-    },
-    {
       "id": "m-storage",
       "name": "Energy storage",
       "url": "category.html?c=energy-storage",
@@ -50,35 +42,20 @@
       "status": "ACTIVE"
     },
     {
-      "id": "m-pol",
-      "name": "Policy",
-      "url": "category.html?c=policy",
-      "parent": null,
-      "order": 5,
-      "status": "PAUSED"
-    },
-    {
       "id": "m-about",
       "name": "About",
       "url": "about.html",
       "parent": null,
       "order": 6,
       "status": "ACTIVE"
-    },
-    {
-      "id": "m-issues",
-      "name": "Issues",
-      "url": "issues.html",
-      "parent": null,
-      "order": 7,
-      "status": "ACTIVE"
     }
   ],
   "footer": [
     {
       "id": "f-guide",
-      "name": "Author guidelines",
+      "name": "How we work",
       "url": "guidelines.html",
+      "parent": null,
       "order": 1,
       "status": "ACTIVE"
     },
@@ -86,6 +63,7 @@
       "id": "f-policy",
       "name": "Editorial policy",
       "url": "guidelines.html#g-review",
+      "parent": null,
       "order": 2,
       "status": "ACTIVE"
     },
@@ -93,6 +71,7 @@
       "id": "f-privacy",
       "name": "Privacy",
       "url": "privacy.html",
+      "parent": null,
       "order": 3,
       "status": "ACTIVE"
     },
@@ -100,6 +79,7 @@
       "id": "f-rss",
       "name": "RSS",
       "url": "rss/feed.xml",
+      "parent": null,
       "order": 4,
       "status": "ACTIVE"
     }
