@@ -1,14 +1,66 @@
 {
   "version": 1,
   "flags": {
-    "ADVERTISING": { "state": "disabled" },
-    "NEWSLETTER": { "state": "enabled" },
-    "COMMENTS": { "state": "disabled" },
-    "PDF": { "state": "disabled" },
-    "SOCIAL": { "state": "enabled" },
-    "JOBS": { "state": "disabled" },
-    "EVENTS": { "state": "disabled" },
-    "MEMBERSHIP": { "state": "disabled" },
-    "AUTHOR_REGISTRATION": { "state": "disabled", "locked": true, "note": "Invitation-only by policy. Cannot be enabled." }
+    "ADVERTISING": {
+      "state": "disabled",
+      "starts": null,
+      "ends": null,
+      "locked": false,
+      "note": ""
+    },
+    "NEWSLETTER": {
+      "state": "enabled",
+      "starts": null,
+      "ends": null,
+      "locked": false,
+      "note": ""
+    },
+    "COMMENTS": {
+      "state": "disabled",
+      "starts": null,
+      "ends": null,
+      "locked": false,
+      "note": ""
+    },
+    "PDF": {
+      "state": "disabled",
+      "starts": null,
+      "ends": null,
+      "locked": false,
+      "note": ""
+    },
+    "SOCIAL": {
+      "state": "enabled",
+      "starts": null,
+      "ends": null,
+      "locked": false,
+      "note": ""
+    },
+    "JOBS": {
+      "state": "disabled",
+      "starts": null,
+      "ends": null,
+      "locked": false,
+      "note": ""
+    },
+    "EVENTS": {
+      "state": "disabled",
+      "starts": null,
+      "ends": null,
+      "locked": false,
+      "note": ""
+    },
+    "MEMBERSHIP": {
+      "state": "disabled",
+      "starts": null,
+      "ends": null,
+      "locked": false,
+      "note": ""
+    },
+    "AUTHOR_REGISTRATION": {
+      "state": "disabled",
+      "locked": true,
+      "note": "Invitation-only by policy."
+    }
   }
 }
