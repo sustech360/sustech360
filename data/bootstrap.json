@@ -1,18 +1,14 @@
 {
   "version": 1,
-  "build": 0,
-  "generated_at": "2026-09-12T00:00:00Z",
-  "note": "Seed bundle. Publishing configuration from the control centre replaces this file.",
+  "build": 1,
+  "generated_at": "2026-09-14T04:22:27.123Z",
   "settings": {
-    "version": 1,
-    "generated_at": "2026-09-10T00:00:00Z",
     "brand": {
       "name": "Sustainable Science, Technology and Solutions 360",
-      "short_name": "SusTech360",
-      "tagline": "Research, technology and policy for the energy transition",
+      "tagline": "Research, technology and policy for the energy transition %",
       "logo": "assets/icons/logo.svg",
       "logo_dark": "assets/icons/logo-dark.svg",
-      "favicon": "assets/icons/logo-mark.svg"
+      "short_name": "SusTech360"
     },
     "appearance": {
       "tokens": {
@@ -27,7 +23,6 @@
     },
     "seo": {
       "site_url": "https://sustech360.com/",
-      "twitter": "",
       "publisher": "Sustainable Science, Technology and Solutions 360"
     },
     "analytics": {
@@ -38,7 +33,7 @@
       "enabled": false
     },
     "contact": {
-      "editorial": "editor@example.com"
+      "editorial": "authors@sustech360.com"
     },
     "reading": {
       "allow_pdf_download": true,
@@ -49,14 +44,6 @@
   "menus": {
     "version": 1,
     "primary": [
-      {
-        "id": "m-energy",
-        "name": "Energy",
-        "url": "category.html?c=energy",
-        "parent": null,
-        "order": 1,
-        "status": "ACTIVE"
-      },
       {
         "id": "m-storage",
         "name": "Energy storage",
@@ -98,35 +85,20 @@
         "status": "ACTIVE"
       },
       {
-        "id": "m-pol",
-        "name": "Policy",
-        "url": "category.html?c=policy",
-        "parent": null,
-        "order": 5,
-        "status": "PAUSED"
-      },
-      {
         "id": "m-about",
         "name": "About",
         "url": "about.html",
         "parent": null,
         "order": 6,
         "status": "ACTIVE"
-      },
-      {
-        "id": "m-issues",
-        "name": "Issues",
-        "url": "issues.html",
-        "parent": null,
-        "order": 7,
-        "status": "ACTIVE"
       }
     ],
     "footer": [
       {
         "id": "f-guide",
-        "name": "Author guidelines",
+        "name": "How we work",
         "url": "guidelines.html",
+        "parent": null,
         "order": 1,
         "status": "ACTIVE"
       },
@@ -134,6 +106,7 @@
         "id": "f-policy",
         "name": "Editorial policy",
         "url": "guidelines.html#g-review",
+        "parent": null,
         "order": 2,
         "status": "ACTIVE"
       },
@@ -141,6 +114,7 @@
         "id": "f-privacy",
         "name": "Privacy",
         "url": "privacy.html",
+        "parent": null,
         "order": 3,
         "status": "ACTIVE"
       },
@@ -148,6 +122,7 @@
         "id": "f-rss",
         "name": "RSS",
         "url": "rss/feed.xml",
+        "parent": null,
         "order": 4,
         "status": "ACTIVE"
       }
@@ -159,58 +134,81 @@
       {
         "id": "lead",
         "type": "hero",
-        "active": true,
-        "order": 1,
         "title": "",
-        "source": "manual",
-        "items": [
-          "sodium-ion-hard-carbon-anodes"
-        ],
-        "layout": "lead"
+        "source": "latest",
+        "count": 1,
+        "layout": "lead",
+        "order": 1,
+        "active": true,
+        "starts": null,
+        "ends": null,
+        "items": []
       },
       {
         "id": "ad-top",
         "type": "ad",
-        "active": true,
+        "title": "",
+        "source": "HOME_TOP",
+        "count": 0,
+        "layout": "",
         "order": 2,
+        "active": true,
+        "starts": null,
+        "ends": null,
+        "items": [],
         "placement": "HOME_TOP"
       },
       {
         "id": "latest",
         "type": "list",
-        "active": true,
-        "order": 3,
         "title": "Latest",
         "source": "latest",
         "count": 6,
-        "layout": "rows"
+        "layout": "rows",
+        "order": 3,
+        "active": true,
+        "starts": null,
+        "ends": null,
+        "items": []
       },
       {
         "id": "storage",
         "type": "list",
-        "active": true,
-        "order": 4,
         "title": "Energy storage",
         "source": "category:energy-storage",
         "count": 4,
-        "layout": "grid"
+        "layout": "grid",
+        "order": 4,
+        "active": true,
+        "starts": null,
+        "ends": null,
+        "items": []
       },
       {
         "id": "research",
         "type": "list",
-        "active": true,
-        "order": 5,
         "title": "Research highlights",
         "source": "format:research-highlight",
         "count": 3,
-        "layout": "rows"
+        "layout": "rows",
+        "order": 5,
+        "active": true,
+        "starts": null,
+        "ends": null,
+        "items": []
       },
       {
         "id": "newsletter",
         "type": "newsletter",
-        "active": true,
+        "title": "The weekly brief",
+        "source": "",
+        "count": 0,
+        "layout": "",
         "order": 6,
-        "title": "The weekly brief"
+        "active": true,
+        "starts": null,
+        "ends": null,
+        "items": []
       }
     ]
   },
@@ -218,33 +216,65 @@
     "version": 1,
     "flags": {
       "ADVERTISING": {
-        "state": "disabled"
+        "state": "disabled",
+        "starts": null,
+        "ends": null,
+        "locked": false,
+        "note": ""
       },
       "NEWSLETTER": {
-        "state": "enabled"
+        "state": "enabled",
+        "starts": null,
+        "ends": null,
+        "locked": false,
+        "note": ""
       },
       "COMMENTS": {
-        "state": "disabled"
+        "state": "disabled",
+        "starts": null,
+        "ends": null,
+        "locked": false,
+        "note": ""
       },
       "PDF": {
-        "state": "disabled"
+        "state": "disabled",
+        "starts": null,
+        "ends": null,
+        "locked": false,
+        "note": ""
       },
       "SOCIAL": {
-        "state": "enabled"
+        "state": "enabled",
+        "starts": null,
+        "ends": null,
+        "locked": false,
+        "note": ""
       },
       "JOBS": {
-        "state": "disabled"
+        "state": "disabled",
+        "starts": null,
+        "ends": null,
+        "locked": false,
+        "note": ""
       },
       "EVENTS": {
-        "state": "disabled"
+        "state": "disabled",
+        "starts": null,
+        "ends": null,
+        "locked": false,
+        "note": ""
       },
       "MEMBERSHIP": {
-        "state": "disabled"
+        "state": "disabled",
+        "starts": null,
+        "ends": null,
+        "locked": false,
+        "note": ""
       },
       "AUTHOR_REGISTRATION": {
         "state": "disabled",
         "locked": true,
-        "note": "Invitation-only by policy. Cannot be enabled."
+        "note": "Invitation-only by policy."
       }
     }
   },
@@ -252,103 +282,69 @@
     "version": 1,
     "categories": [
       {
+        "_row": 2,
         "slug": "energy",
         "name": "Energy",
-        "parent": null,
-        "description": "Generation, conversion, storage and delivery."
+        "parent": "",
+        "description": "Generation, conversion, storage and delivery.",
+        "order": 1,
+        "status": "ACTIVE"
       },
       {
+        "_row": 3,
         "slug": "energy-storage",
         "name": "Energy storage",
         "parent": "energy",
-        "description": "Batteries, capacitors and thermal storage."
+        "description": "Batteries, capacitors and thermal storage.",
+        "order": 2,
+        "status": "ACTIVE"
       },
       {
+        "_row": 4,
         "slug": "renewable-energy",
         "name": "Renewable energy",
         "parent": "energy",
-        "description": "Solar, wind, hydro, geothermal, ocean."
+        "description": "Solar, wind, hydro, geothermal, ocean.",
+        "order": 3,
+        "status": "ACTIVE"
       },
       {
+        "_row": 5,
         "slug": "sustainability",
         "name": "Sustainability",
-        "parent": null,
-        "description": "Circular economy, climate, resources."
+        "parent": "",
+        "description": "Circular economy, climate, resources.",
+        "order": 4,
+        "status": "ACTIVE"
       },
       {
+        "_row": 6,
         "slug": "materials",
         "name": "Materials",
-        "parent": null,
-        "description": "The substances that set the limits."
+        "parent": "",
+        "description": "The substances that set the limits.",
+        "order": 5,
+        "status": "ACTIVE"
       },
       {
+        "_row": 7,
         "slug": "research",
         "name": "Research",
-        "parent": null,
-        "description": "What the literature is showing now."
+        "parent": "",
+        "description": "What the literature is showing now.",
+        "order": 6,
+        "status": "ACTIVE"
       },
       {
+        "_row": 8,
         "slug": "policy",
         "name": "Policy",
-        "parent": null,
-        "description": "Regulation, incentives, standards."
-      }
-    ],
-    "topics": [
-      {
-        "slug": "sodium-ion",
-        "name": "Sodium-ion",
-        "category": "energy-storage"
-      },
-      {
-        "slug": "hard-carbon",
-        "name": "Hard carbon",
-        "category": "materials"
-      },
-      {
-        "slug": "solid-state",
-        "name": "Solid-state batteries",
-        "category": "energy-storage"
-      },
-      {
-        "slug": "hydrogen",
-        "name": "Hydrogen",
-        "category": "energy"
+        "parent": "",
+        "description": "Regulation, incentives, standards.",
+        "order": 7,
+        "status": "ACTIVE"
       }
     ]
   },
-  "articles": [
-    {
-      "id": "MAG-2026-000124",
-      "slug": "sodium-ion-hard-carbon-anodes",
-      "title": "Hard carbon is quietly deciding how far sodium-ion can go",
-      "subtitle": "The cathode gets the headlines. The anode sets the ceiling.",
-      "summary": "Sodium-ion cells are cheap on paper. Whether they are cheap in practice depends on a material most cost models still treat as a rounding error.",
-      "category": "energy-storage",
-      "topics": [
-        "sodium-ion",
-        "hard-carbon"
-      ],
-      "tags": [
-        "batteries",
-        "materials science",
-        "india"
-      ],
-      "level": "understand",
-      "format": "research-highlight",
-      "authors": [
-        {
-          "id": "AUT-0007",
-          "name": "R. Menon",
-          "institution": "Indian Institute of Science"
-        }
-      ],
-      "published_at": "2026-09-08T06:00:00Z",
-      "updated_at": null,
-      "reading_minutes": 7,
-      "public_version": 3,
-      "image": "",
-      "sponsored": false
-    }
-  ]
+  "articles": []
 }
