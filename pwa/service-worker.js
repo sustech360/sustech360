@@ -36,6 +36,12 @@ self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
 
+  // The control centre and the author portal are never cached. They are tools
+  // used by signed-in staff who are online by definition, and a stale tool is
+  // worse than a slow one: you change a setting, the interface does not show it,
+  // and there is nothing on screen to explain why. Straight to the network.
+  if (/\/(admin|author)\//.test(req.url)) return;
+
   // Content: network first, so a correction is never masked by a stale cache.
   if (/\/data\//.test(req.url)) {
     e.respondWith(fetch(req).then(function (res) {
