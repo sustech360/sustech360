@@ -34,6 +34,9 @@
     reason_required: 'A reason is required for this action.',
     expiry_required: 'Temporary access needs an end date.',
     weak_password: 'Choose a longer password with upper case, lower case and digits.',
+    bad_social_url: 'A social link must start with https://',
+    wrong_platform: 'That link points at a different site than the box expects.',
+    unknown_platform: 'That is not one of the platforms this site supports.',
     no_endpoint: 'The API endpoint is not configured. Set it in admin/config.js.',
     offline: 'The backend did not respond. Check the deployment URL and your connection.',
     already_a_user: 'That email address already has an account.',
@@ -78,6 +81,17 @@
   function start(forcePassword) {
     $('login').classList.add('hidden');
     $('app').classList.remove('hidden');
+    buildNav();
+    $('who').innerHTML = '<strong>' + esc(me.user.name) + '</strong><span>' +
+      esc(me.user.role_id.replace(/_/g, ' ').toLowerCase()) + '</span>';
+
+    // The title is also the way home, as it is in most tools.
+    var home = document.querySelector('.sidebar__title');
+    if (home && !home.dataset.wired) {
+      home.dataset.wired = '1';
+      home.style.cursor = 'pointer';
+      home.addEventListener('click', function () { render('dashboard'); closeNav(); });
+    }
     api.call('health').then(function (h) { $('env').textContent = h.env; }).catch(function () {});
     render(forcePassword ? 'account' : 'dashboard');
     if (forcePassword) {
@@ -86,19 +100,147 @@
     }
   }
 
-  document.querySelectorAll('.rail nav button').forEach(function (b) {
-    b.addEventListener('click', function () {
-      document.querySelectorAll('.rail nav button').forEach(function (x) { x.classList.remove('is-active'); });
-      b.classList.add('is-active');
-      render(b.getAttribute('data-view'));
+  /* ---- navigation ----
+     Twenty-two screens in one flat list is a directory, not a tool. They are
+     grouped by the job you came to do, and a search box jumps straight to one:
+     Ctrl+K, type three letters, Enter. */
+
+  var NAV = [
+    ['Overview', [
+      ['dashboard', 'Dashboard']
+    ]],
+    ['Editorial', [
+      ['queue', 'Queue'],
+      ['reviews', 'Your reviews'],
+      ['issues', 'Magazine issues']
+    ]],
+    ['People', [
+      ['invitations', 'Author invitations'],
+      ['users', 'Users'],
+      ['roles', 'Roles'],
+      ['delegation', 'Delegated access']
+    ]],
+    ['Standards', [
+      ['guidelines', 'Guidelines'],
+      ['rulebook', 'Formats and rules']
+    ]],
+    ['The site', [
+      ['menus', 'Navigation'],
+      ['homepage', 'Homepage'],
+      ['sections', 'Sections and flags'],
+      ['appearance', 'Brand and social'],
+      ['publish', 'Publish']
+    ]],
+    ['Audience and income', [
+      ['newsletter', 'Newsletter'],
+      ['social', 'Social queue'],
+      ['advertising', 'Advertising'],
+      ['billing', 'Billing']
+    ]],
+    ['Operations', [
+      ['performance', 'Performance'],
+      ['audit', 'Audit log'],
+      ['account', 'Account']
+    ]]
+  ];
+
+  // Screens reached from inside another screen rather than from the menu.
+  var SUBTITLES = {
+    dashboard: 'Dashboard', desk: 'Article', review: 'Review',
+    guideline: 'Guideline', campaign: 'Newsletter campaign', issue: 'Magazine issue'
+  };
+
+  function titleOf(name) {
+    var found = SUBTITLES[name];
+    NAV.forEach(function (group) {
+      group[1].forEach(function (item) { if (item[0] === name) found = item[1]; });
     });
+    return found || name;
+  }
+
+  function buildNav() {
+    var host = $('nav');
+    host.innerHTML = '';
+    NAV.forEach(function (group) {
+      var box = el('div', { class: 'navgroup' });
+      box.appendChild(el('div', { class: 'navgroup__label', text: group[0] }));
+      group[1].forEach(function (item) {
+        var b = el('button', { type: 'button', 'data-view': item[0], text: item[1] });
+        b.addEventListener('click', function () { render(item[0]); closeNav(); });
+        box.appendChild(b);
+      });
+      host.appendChild(box);
+    });
+  }
+
+  function markActive(name) {
+    document.querySelectorAll('#nav button').forEach(function (b) {
+      var on = b.getAttribute('data-view') === name;
+      b.classList.toggle('is-active', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+  }
+
+  /** A number beside a screen that is waiting for someone. */
+  function badge(view, count) {
+    var b = document.querySelector('#nav button[data-view="' + view + '"]');
+    if (!b) return;
+    var old = b.querySelector('.count');
+    if (old) old.remove();
+    if (count > 0) b.appendChild(el('span', { class: 'count', text: String(count) }));
+  }
+
+  function filterNav(term) {
+    term = String(term || '').trim().toLowerCase();
+    var any = false;
+    document.querySelectorAll('#nav .navgroup').forEach(function (group) {
+      var shown = 0;
+      group.querySelectorAll('button').forEach(function (b) {
+        var match = !term || b.textContent.toLowerCase().indexOf(term) !== -1;
+        b.style.display = match ? '' : 'none';
+        if (match) { shown++; any = true; }
+      });
+      group.style.display = shown ? '' : 'none';
+    });
+    var empty = $('nav').querySelector('.navempty');
+    if (!any && !empty) {
+      $('nav').appendChild(el('div', { class: 'navempty', text: 'Nothing matches “' + term + '”' }));
+    } else if (any && empty) { empty.remove(); }
+  }
+
+  function openNav() { $('app').classList.add('nav-open'); $('scrim').hidden = false; }
+  function closeNav() { $('app').classList.remove('nav-open'); $('scrim').hidden = true; }
+
+  $('navopen').addEventListener('click', openNav);
+  $('navclose').addEventListener('click', closeNav);
+  $('scrim').addEventListener('click', closeNav);
+
+  $('navsearch').addEventListener('input', function () { filterNav(this.value); });
+  $('navsearch').addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { this.value = ''; filterNav(''); this.blur(); }
+    if (e.key === 'Enter') {
+      var first = document.querySelector('#nav button:not([style*="none"])');
+      if (first) { first.click(); this.value = ''; filterNav(''); }
+    }
+  });
+
+  addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      openNav();
+      $('navsearch').focus();
+      $('navsearch').select();
+    }
   });
 
   /* ---- views ---- */
 
   function render(name, arg) {
     var v = $('view');
-    v.innerHTML = '<h2>Loading</h2>';
+    v.innerHTML = '<p class="hint">Loading…</p>';
+    $('viewtitle').textContent = titleOf(name);
+    markActive(name);
+    v.scrollIntoView ? window.scrollTo(0, 0) : null;
     (VIEWS[name] || VIEWS.dashboard)(v, arg);
   }
 
@@ -114,14 +256,101 @@
   }
 
   var VIEWS = {
+    /** The dashboard answers one question: what is waiting for me?
+     *
+     *  Each figure is fetched separately and allowed to fail — a reviewer has
+     *  no business reading the billing ledger, and a screen that breaks because
+     *  one permission is missing is a screen nobody trusts. Whatever the person
+     *  is entitled to see appears; the rest is quietly absent. */
     dashboard: function (v) {
-      v.innerHTML = '<h2>Dashboard</h2>' +
-        '<div class="card"><p>Signed in as <strong>' + esc(me.user.name) + '</strong> (' + esc(me.user.role_id) + ').</p>' +
-        '<p class="hint">The queue holds anything waiting on an editor. Your reviews holds anything waiting on you. ' +
-        'Publication is the supervisor admin\'s step, and every version that has ever been on the site can be put back.</p></div>' +
-        '<div class="card"><h2>Your permissions</h2><p>' +
-        me.permissions.map(function (p) { return '<code>' + esc(p.permission) + '</code>'; }).join(' ') +
-        '</p></div>';
+      var ask = function (action, payload) {
+        return api.call(action, payload).catch(function () { return null; });
+      };
+
+      v.innerHTML = '<p class="hint">Gathering what needs you…</p>';
+
+      Promise.all([
+        ask('editorialQueue'),
+        ask('myReviews'),
+        ask('previewConfiguration'),
+        ask('adsBundle'),
+        ask('newsletterOverview'),
+        ask('listBackups'),
+        ask('performanceReport', {})
+      ]).then(function (r) {
+        var queue = r[0], reviews = r[1], pending = r[2], ads = r[3];
+        var news = r[4], backups = r[5], perf = r[6];
+        var tiles = [];
+
+        function tile(n, label, note, view, tone) {
+          tiles.push({ n: n, label: label, note: note, view: view, tone: tone });
+        }
+
+        if (queue) {
+          var submitted = queue.filter(function (a) {
+            return ['SUBMITTED', 'RESUBMITTED'].indexOf(a.version_status) !== -1;
+          }).length;
+          var approving = queue.filter(function (a) { return a.version_status === 'READY_FOR_PUBLICATION'; }).length;
+          tile(submitted, 'waiting to be taken on', submitted ? 'Authors are waiting for a first response' : 'Nothing new submitted', 'queue', submitted ? 'waiting' : 'clear');
+          if (approving) tile(approving, 'ready to publish', 'Approval is the supervisor admin’s step', 'queue', 'urgent');
+          badge('queue', submitted + approving);
+        }
+        if (reviews) {
+          tile(reviews.length, 'reviews assigned to you', reviews.length ? 'Due dates are on the screen' : 'None outstanding', 'reviews', reviews.length ? 'waiting' : 'clear');
+          badge('reviews', reviews.length);
+        }
+        if (pending) {
+          tile(pending.pending, 'unpublished changes', pending.pending ? 'Readers still see the last published version' : 'The live site matches your working copy', 'publish', pending.pending ? 'waiting' : 'clear');
+          badge('publish', pending.pending);
+        }
+        if (ads) {
+          var waiting = ads.creatives.filter(function (c) { return c.status === 'PENDING'; }).length;
+          if (waiting) { tile(waiting, 'advertisements to approve', 'Someone other than the uploader must approve', 'advertising', 'waiting'); }
+          badge('advertising', waiting);
+        }
+        if (news) tile(news.confirmed, 'newsletter subscribers', news.pending + ' still to confirm', 'newsletter', 'clear');
+        if (perf && perf.problems) {
+          tile(perf.problems.length, 'performance problems', perf.problems.length ? 'Pages rated poor with enough samples' : 'Nothing rated poor', 'performance', perf.problems.length ? 'waiting' : 'clear');
+        }
+
+        var html = '';
+        var urgent = tiles.filter(function (t) { return t.tone !== 'clear' && t.n > 0; });
+        if (!urgent.length) {
+          html += '<div class="allclear"><strong>Nothing is waiting.</strong> ' +
+                  'Everything submitted has been dealt with and the live site matches your working copy.</div>';
+        }
+
+        html += '<div class="tiles">' + tiles.map(function (t, i) {
+          return '<button class="tile is-' + t.tone + '" data-go="' + esc(t.view) + '" type="button">' +
+            '<span class="tile__n">' + t.n + '</span>' +
+            '<span class="tile__label">' + esc(t.label) + '</span>' +
+            '<span class="tile__note">' + esc(t.note) + '</span></button>';
+        }).join('') + '</div>';
+
+        html += '<div class="card"><h2>Start something</h2><div class="shortcuts">' +
+          '<button class="ghost" data-go="invitations">Invite an author</button>' +
+          '<button class="ghost" data-go="newsletter">Write the newsletter</button>' +
+          '<button class="ghost" data-go="issues">Build an issue</button>' +
+          '<button class="ghost" data-go="appearance">Edit the brand</button>' +
+          '<button class="ghost" data-go="publish">Publish the configuration</button>' +
+          '</div></div>';
+
+        var last = backups && backups.length ? backups[0] : null;
+        html += '<div class="card"><h2>Housekeeping</h2><table><tbody>' +
+          '<tr><td>Signed in as</td><td>' + esc(me.user.name) + ' — ' +
+            esc(me.user.role_id.replace(/_/g, " ").toLowerCase()) + '</td></tr>' +
+          (last ? '<tr><td>Last backup</td><td>' + esc(String(last.created_at).slice(0, 16).replace("T", " ")) +
+            (last.verified_at ? ' — verified' : ' — <strong>not verified</strong>') + '</td></tr>'
+                : '<tr><td>Last backup</td><td class="hint">No backup on record</td></tr>') +
+          '<tr><td>Your permissions</td><td>' +
+            me.permissions.map(function (p) { return "<code>" + esc(p.permission) + "</code>"; }).join(" ") +
+          '</td></tr></tbody></table></div>';
+
+        v.innerHTML = html;
+        v.querySelectorAll('[data-go]').forEach(function (b) {
+          b.addEventListener('click', function () { render(b.getAttribute('data-go')); });
+        });
+      });
     },
 
     users: function (v) {

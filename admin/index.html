@@ -3,58 +3,74 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#13212E">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="robots" content="noindex, nofollow">
-<title>Control centre</title>
+<title>Control centre — SusTech360</title>
+<link rel="icon" href="../assets/icons/logo-mark.svg">
 <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<div id="login" class="login">
-  <h2>Sign in</h2>
-  <div class="card">
+<!-- Sign in -->
+<div id="login" class="signin">
+  <div class="signin__card">
+    <div class="signin__brand">
+      <img src="../assets/icons/logo-mark.svg" alt="" width="40" height="40">
+      <div>
+        <strong>Control centre</strong>
+        <span>Sustainable Science, Technology and Solutions 360</span>
+      </div>
+    </div>
     <label for="email">Email</label>
-    <input id="email" type="email" autocomplete="username">
+    <input id="email" type="email" autocomplete="username" autofocus>
     <label for="password">Password</label>
     <input id="password" type="password" autocomplete="current-password">
-    <label for="mfa">Authentication code <span class="hint">(if enabled)</span></label>
+    <label for="mfa">Authentication code <span class="hint">if enabled</span></label>
     <input id="mfa" inputmode="numeric" autocomplete="one-time-code">
     <div class="rowbtns"><button class="act" id="signin" type="button">Sign in</button></div>
     <div id="loginmsg"></div>
   </div>
 </div>
 
-<div id="app" class="layout hidden">
-  <aside class="rail">
-    <h1>Control centre</h1>
-    <div class="env" id="env"></div>
-    <nav>
-      <button data-view="dashboard" class="is-active">Dashboard</button>
-      <button data-view="queue">Queue</button>
-      <button data-view="reviews">Your reviews</button>
-      <button data-view="users">Users</button>
-      <button data-view="invitations">Author invitations</button>
-      <button data-view="roles">Roles</button>
-      <button data-view="menus">Navigation</button>
-      <button data-view="homepage">Homepage</button>
-      <button data-view="sections">Sections and flags</button>
-      <button data-view="appearance">Brand</button>
-      <button data-view="advertising">Advertising</button>
-      <button data-view="newsletter">Newsletter</button>
-      <button data-view="social">Social queue</button>
-      <button data-view="issues">Magazine issues</button>
-      <button data-view="delegation">Delegated access</button>
-      <button data-view="guidelines">Guidelines</button>
-      <button data-view="rulebook">Formats and rules</button>
-      <button data-view="billing">Billing</button>
-      <button data-view="performance">Performance</button>
-      <button data-view="audit">Audit log</button>
-      <button data-view="publish">Publish</button>
-      <button data-view="account">Account</button>
-    </nav>
-    <div class="rowbtns"><button class="ghost" id="signout" type="button">Sign out</button></div>
+<!-- The tool -->
+<div id="app" class="app hidden">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__head">
+      <img src="../assets/icons/logo-mark.svg" alt="" width="26" height="26">
+      <div class="sidebar__title">
+        <strong>Control centre</strong>
+        <span class="env" id="env"></span>
+      </div>
+      <button class="iconbtn sidebar__close" id="navclose" type="button" aria-label="Close menu">&times;</button>
+    </div>
+
+    <div class="sidebar__search">
+      <input id="navsearch" type="search" placeholder="Search screens&hellip;" aria-label="Search screens"
+             autocomplete="off" spellcheck="false">
+      <kbd>Ctrl K</kbd>
+    </div>
+
+    <nav id="nav" aria-label="Sections"></nav>
+
+    <div class="sidebar__foot">
+      <div class="who" id="who"></div>
+      <button class="ghost" id="signout" type="button">Sign out</button>
+    </div>
   </aside>
-  <main id="view"></main>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="iconbtn topbar__menu" id="navopen" type="button" aria-label="Open menu">&#9776;</button>
+      <h1 id="viewtitle">Dashboard</h1>
+      <div class="topbar__right">
+        <a class="ghost" href="../" target="_blank" rel="noopener">View the site</a>
+      </div>
+    </header>
+    <main id="view" tabindex="-1"></main>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
 </div>
 
 <script src="config.js"></script>
