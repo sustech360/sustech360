@@ -21,11 +21,7 @@
     "site_url": "https://sustech360.com/",
     "publisher": "Sustainable Science, Technology and Solutions 360"
   },
-  "analytics": {
-    "ga4_id": ""
-  },
   "ads": {
-    "adsense_client": "",
     "enabled": false
   },
   "contact": {
