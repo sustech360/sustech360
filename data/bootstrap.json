@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "build": 3,
-  "generated_at": "2026-09-14T04:26:37.450Z",
+  "build": 4,
+  "generated_at": "2026-09-14T05:54:59.011Z",
   "settings": {
     "brand": {
       "name": "Sustainable Science, Technology and Solutions 360",
@@ -25,11 +25,7 @@
       "site_url": "https://sustech360.com/",
       "publisher": "Sustainable Science, Technology and Solutions 360"
     },
-    "analytics": {
-      "ga4_id": ""
-    },
     "ads": {
-      "adsense_client": "",
       "enabled": false
     },
     "contact": {
