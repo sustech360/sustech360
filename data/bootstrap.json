@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "build": 1,
-  "generated_at": "2026-09-14T04:22:27.123Z",
+  "build": 2,
+  "generated_at": "2026-09-14T04:26:14.222Z",
   "settings": {
     "brand": {
       "name": "Sustainable Science, Technology and Solutions 360",
-      "tagline": "Research, technology and policy for the energy transition %",
+      "tagline": "Research, science, technology and policy for the energy transition",
       "logo": "assets/icons/logo.svg",
       "logo_dark": "assets/icons/logo-dark.svg",
       "short_name": "SusTech360"
