@@ -4,58 +4,81 @@
     {
       "id": "lead",
       "type": "hero",
-      "active": true,
-      "order": 1,
       "title": "",
-      "source": "manual",
-      "items": [
-        "sodium-ion-hard-carbon-anodes"
-      ],
-      "layout": "lead"
+      "source": "latest",
+      "count": 1,
+      "layout": "lead",
+      "order": 1,
+      "active": true,
+      "starts": null,
+      "ends": null,
+      "items": []
     },
     {
       "id": "ad-top",
       "type": "ad",
-      "active": true,
+      "title": "",
+      "source": "HOME_TOP",
+      "count": 0,
+      "layout": "",
       "order": 2,
+      "active": true,
+      "starts": null,
+      "ends": null,
+      "items": [],
       "placement": "HOME_TOP"
     },
     {
       "id": "latest",
       "type": "list",
-      "active": true,
-      "order": 3,
       "title": "Latest",
       "source": "latest",
       "count": 6,
-      "layout": "rows"
+      "layout": "rows",
+      "order": 3,
+      "active": true,
+      "starts": null,
+      "ends": null,
+      "items": []
     },
     {
       "id": "storage",
       "type": "list",
-      "active": true,
-      "order": 4,
       "title": "Energy storage",
       "source": "category:energy-storage",
       "count": 4,
-      "layout": "grid"
+      "layout": "grid",
+      "order": 4,
+      "active": true,
+      "starts": null,
+      "ends": null,
+      "items": []
     },
     {
       "id": "research",
       "type": "list",
-      "active": true,
-      "order": 5,
       "title": "Research highlights",
       "source": "format:research-highlight",
       "count": 3,
-      "layout": "rows"
+      "layout": "rows",
+      "order": 5,
+      "active": true,
+      "starts": null,
+      "ends": null,
+      "items": []
     },
     {
       "id": "newsletter",
       "type": "newsletter",
-      "active": true,
+      "title": "The weekly brief",
+      "source": "",
+      "count": 0,
+      "layout": "",
       "order": 6,
-      "title": "The weekly brief"
+      "active": true,
+      "starts": null,
+      "ends": null,
+      "items": []
     }
   ]
 }
