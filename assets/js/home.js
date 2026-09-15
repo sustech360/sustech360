@@ -10,9 +10,13 @@
      screen, which reads as a thin magazine rather than a considered one. */
   var used = {};
 
+  var features = {};
+
   Site.ready.then(function () {
-    return API.getHomepage();
-  }).then(function (cfg) {
+    return Promise.all([API.getHomepage(), API.getFeatures()]);
+  }).then(function (both) {
+    var cfg = both[0];
+    features = (both[1] && both[1].flags) || {};
     var sections = (cfg.sections || [])
       .filter(function (s) { return s.active && inSchedule(s); })
       .sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
@@ -41,6 +45,10 @@
       return Promise.resolve();
     }
     if (section.type === 'newsletter') {
+      // The engine refuses subscriptions while the newsletter is switched off.
+      // Showing the form anyway means a reader types their address, is told to
+      // check their inbox, and waits for a confirmation that will never come.
+      if ((features.NEWSLETTER || {}).state !== 'enabled') return Promise.resolve();
       host.appendChild(newsletter(section));
       return Promise.resolve();
     }
@@ -147,7 +155,7 @@
     return el('section', { class: 'section' }, [
       el('div', { class: 'newsletter' }, [
         el('h2', { text: s.title || 'Newsletter' }),
-        el('p', { text: 'One email a week: what published, what it means, and what to read next.' }),
+        el('p', { text: s.blurb || 'One email a week: what published, what it means, and what to read next.' }),
         el('form', {}, [input, btn]), msg
       ])
     ]);
