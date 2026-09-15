@@ -95,11 +95,11 @@
     },
     {
       "type": "p",
-      "text": "**A huge surface area is useful only when electrolyte ions can actually reach it.**"
+      "text": "A huge surface area is useful only when electrolyte ions can actually reach it."
     },
     {
       "type": "p",
-      "text": "This is why researchers are developing **hierarchical porous structures**."
+      "text": "This is why researchers are developing **hierarchical porous structures."
     },
     {
       "type": "p",
@@ -111,7 +111,7 @@
     },
     {
       "type": "p",
-      "text": "**How much surface area can we create?**"
+      "text": "How much surface area can we create?"
     },
     {
       "type": "p",
@@ -119,7 +119,7 @@
     },
     {
       "type": "p",
-      "text": "**How much of that surface can we actually use?**"
+      "text": "How much of that surface can we actually use?"
     },
     {
       "type": "p",
@@ -127,7 +127,7 @@
     },
     {
       "type": "p",
-      "text": "Another approach is **pseudocapacitance**."
+      "text": "Another approach is **pseudocapacitance."
     },
     {
       "type": "p",
@@ -147,7 +147,7 @@
     },
     {
       "type": "p",
-      "text": "**It becomes an active part of the energy-storage process.**"
+      "text": "It becomes an active part of the energy-storage process."
     },
     {
       "type": "p",
@@ -167,15 +167,15 @@
     },
     {
       "type": "p",
-      "text": "**E = ½CV²**"
+      "text": "E = ½CV²"
     },
     {
       "type": "p",
-      "text": "where *C* is capacitance and *V* is voltage."
+      "text": "where C is capacitance and V is voltage."
     },
     {
       "type": "p",
-      "text": "The important part is **V²**."
+      "text": "The important part is V²."
     },
     {
       "type": "p",
@@ -187,11 +187,11 @@
     },
     {
       "type": "p",
-      "text": "Researchers are therefore exploring **organic electrolytes, ionic liquids, gels, and solid-state systems**."
+      "text": "Researchers are therefore exploring **organic electrolytes, ionic liquids, gels, and solid-state systems."
     },
     {
       "type": "p",
-      "text": "The future may depend not on one extraordinary material, but on finding the right **electrode–electrolyte combination**."
+      "text": "The future may depend not on one extraordinary material, but on finding the right **electrode–electrolyte combination."
     },
     {
       "type": "p",
@@ -223,7 +223,7 @@
     },
     {
       "type": "p",
-      "text": "**“Which is better?”**"
+      "text": "“Which is better?”"
     },
     {
       "type": "p",
@@ -231,11 +231,11 @@
     },
     {
       "type": "p",
-      "text": "**“Which technology is better suited to each task?”**"
+      "text": "“Which technology is better suited to each task?”"
     },
     {
       "type": "p",
-      "text": "## The Beginning of Intelligent Energy Storage"
+      "text": "The Beginning of Intelligent Energy Storage"
     },
     {
       "type": "p",
@@ -243,7 +243,7 @@
     },
     {
       "type": "p",
-      "text": "**Temperature.\nVoltage.\nCurrent.\nPower demand.**"
+      "text": "Temperature.\nVoltage.\nCurrent.\nPower demand."
     },
     {
       "type": "p",
@@ -259,7 +259,7 @@
     },
     {
       "type": "p",
-      "text": "## Supercapacitors That Bend"
+      "text": "Supercapacitors That Bend"
     },
     {
       "type": "p",
@@ -287,7 +287,7 @@
     },
     {
       "type": "p",
-      "text": "## The Sustainability Question"
+      "text": "The Sustainability Question"
     },
     {
       "type": "p",
@@ -295,7 +295,7 @@
     },
     {
       "type": "p",
-      "text": "**Can future supercapacitors also be sustainable?**"
+      "text": "Can future supercapacitors also be sustainable?"
     },
     {
       "type": "p",
@@ -315,7 +315,7 @@
     },
     {
       "type": "p",
-      "text": "**performance, lifetime, safety, scalability, and sustainability.**"
+      "text": "performance, lifetime, safety, scalability, and sustainability."
     },
     {
       "type": "p",
@@ -323,7 +323,7 @@
     },
     {
       "type": "p",
-      "text": "## The Real Revolution"
+      "text": "The Real Revolution"
     },
     {
       "type": "p",
@@ -339,7 +339,7 @@
     },
     {
       "type": "p",
-      "text": "The next generation of supercapacitors may be less about simply **storing more charge** and more about **moving energy quickly, efficiently, and intelligently**."
+      "text": "The next generation of supercapacitors may be less about simply **storing more charge** and more about **moving energy quickly, efficiently, and intelligently."
     },
     {
       "type": "h2",
@@ -373,7 +373,7 @@
       "type": "figure",
       "src": "assets/media/MAG-2026-000001/Supercaps.png",
       "alt": "Representation of charged species be stored electrostaticly by the EDLC supercapacitor",
-      "caption": "Representation of charged species be stored electrostaticly by the EDLC supercapacitor (Krishna Kumar M, own work)"
+      "caption": "Representation of charged species be stored electrostaticly by the EDLC supercapacitor (Krishna Kumar M)"
     }
   ],
   "related": []
