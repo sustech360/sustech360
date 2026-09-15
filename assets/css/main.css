@@ -167,9 +167,13 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .toc a { color: var(--muted); border-left: 2px solid var(--rule); padding-left: .6rem; display: block; }
 .toc a.is-active { color: var(--ink); border-left-color: var(--accent); }
 
-.reader-controls { font-family: var(--sans); font-size: .8125rem; margin-top: 1.75rem; display: grid; gap: .5rem; }
-.reader-controls .row { display: flex; gap: .35rem; align-items: center; }
-.reader-controls label { color: var(--muted); min-width: 4.5rem; }
+/* ---------- social links in the footer ---------- */
+
+.social { list-style: none; display: flex; flex-wrap: wrap; gap: 1.1rem; padding: 0; margin: 0 0 1.25rem; }
+.social a { font-family: var(--sans); font-size: .875rem; color: var(--ink); border-bottom: 1px solid var(--rule); padding-bottom: 1px; }
+.social a:hover { text-decoration: none; border-bottom-color: var(--accent); color: var(--accent); }
+.social__title { font-family: var(--sans); font-size: .78125rem; font-weight: 600; color: var(--muted); margin: 0 0 .5rem; letter-spacing: .02em; }
+@media (pointer: coarse) { .social a { min-height: 44px; display: inline-flex; align-items: center; } }
 
 /* ---------- search ---------- */
 
@@ -378,4 +382,57 @@ body {
 }
 .article__body {
   font-size: var(--reader-size, clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem));
+}
+
+/* ============================================================
+   The front page
+   ============================================================
+   Three changes, all about restraint. A section heading now leads
+   somewhere rather than labelling a list. The lead story gets room
+   and a section above it, so a reader knows what they have landed
+   in before they read a word. And the rest is quieter: fewer rules,
+   more space, one weight of emphasis per card. */
+
+.lead {
+  padding: 2.5rem 0 2.75rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: .5rem;
+}
+.lead .kicker {
+  display: inline-block; font-family: var(--sans); font-size: .78125rem;
+  color: var(--accent); margin-bottom: .6rem; letter-spacing: .01em;
+}
+.lead .kicker:hover { text-decoration: none; border-bottom: 1px solid var(--accent); }
+.lead h1 { max-width: 18ch; }
+.lead h1 a:hover { text-decoration: none; color: var(--accent); }
+.lead .standfirst { font-size: 1.1875rem; max-width: 58ch; margin-bottom: 1.1rem; }
+
+.section__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; margin: 0 0 1.35rem;
+}
+.section__more {
+  font-family: var(--sans); font-size: .8125rem; color: var(--accent);
+  white-space: nowrap; border-bottom: 1px solid transparent;
+}
+.section__more:hover { text-decoration: none; border-bottom-color: var(--accent); }
+
+/* Cards: one emphasis each, and a whole card that responds to the pointer. */
+.rows .card { padding: 1.35rem 0; transition: none; }
+.card h3 a:hover { text-decoration: none; color: var(--accent); }
+.card p { max-width: 62ch; }
+.grid .card { border-top-width: 1px; border-top-color: var(--ink); padding-top: .95rem; }
+
+/* The search link reads as an action rather than another menu item. */
+.utility a {
+  font-family: var(--sans); font-size: .8125rem; border: 1px solid var(--rule);
+  border-radius: 999px; padding: .3rem .8rem; color: var(--muted);
+}
+.utility a:hover { text-decoration: none; border-color: var(--accent); color: var(--accent); }
+
+@media (max-width: 720px) {
+  .lead { padding: 1.75rem 0 2rem; }
+  .lead h1 { max-width: none; }
+  .lead .standfirst { font-size: 1.0625rem; }
+  .section { padding: 1.9rem 0; }
 }
