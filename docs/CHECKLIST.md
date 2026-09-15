@@ -30,7 +30,7 @@ Stage 3 and come back — the site is already live at a GitHub address by then.
 - [ ] 2.4b Run **`checkSetup`** — every required line must say `OK` before you go on
 - [ ] 2.5 Run `setup()` and approve the permissions Google asks for
 - [ ] 2.6 Check your inbox for the temporary supervisor password — **keep it**
-- [ ] 2.7 Add the **5 time triggers** (`publishScheduled`, `sendQueuedEmail`, `refreshAdSchedule`, `expireInvitations`, `dailyBackup`)
+- [ ] 2.7 Add the **6 time triggers** (including `flushTelemetry`, every 10 minutes) (`publishScheduled`, `sendQueuedEmail`, `refreshAdSchedule`, `expireInvitations`, `dailyBackup`)
 - [ ] 2.8 Deploy as a **web app**: execute as *me*, access *anyone*
 - [ ] 2.9 Copy the **`/exec` address** — you need it twice in Stage 3
 

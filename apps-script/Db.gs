@@ -77,11 +77,25 @@ const Db = (function () {
       if (cols.indexOf('updated_at') !== -1) patch.updated_at = new Date().toISOString();
       withLock(() => {
         const sh = sheet(table);
-        Object.keys(patch).forEach(k => {
-          const idx = cols.indexOf(k);
-          if (idx === -1) return;
-          sh.getRange(rec._row, idx + 1).setValue(serialize(patch[k]));
-        });
+        // One write, not one per field. Changing three columns used to cost
+        // four range calls and four writes; it now costs one of each, which is
+        // the difference between a quota that lasts the day and one that does
+        // not once several editors are working at once.
+        const changed = Object.keys(patch).map(k => cols.indexOf(k)).filter(i => i !== -1);
+        if (!changed.length) return;
+        const first = Math.min.apply(null, changed);
+        const last = Math.max.apply(null, changed);
+        const width = last - first + 1;
+        const range = sh.getRange(rec._row, first + 1, 1, width);
+        // Read the span once so untouched columns in the middle are written
+        // back unchanged rather than blanked.
+        const row = width === 1 ? [[null]] : range.getValues();
+        for (let i = 0; i < width; i++) {
+          const col = cols[first + i];
+          if (Object.prototype.hasOwnProperty.call(patch, col)) row[0][i] = serialize(patch[col]);
+          else if (width === 1) row[0][i] = serialize(rec[col]);
+        }
+        range.setValues(row);
       });
       delete cache[table];
       return Object.assign({}, rec, patch);
@@ -107,6 +121,26 @@ const Db = (function () {
           const values = rows.map(r => cols.map(c => (r[c] === undefined || r[c] === null ? '' : serialize(r[c]))));
           sh.getRange(2, 1, values.length, cols.length).setValues(values);
         }
+      });
+      delete cache[table];
+      return rows.length;
+    },
+
+    /** Appends many rows in one call. Twenty inserts used to be twenty round
+     *  trips to the spreadsheet; this is one. */
+    insertMany: function (table, objects) {
+      if (!objects || !objects.length) return 0;
+      const cols = SCHEMA[table];
+      const now = new Date().toISOString();
+      const rows = objects.map(obj => {
+        if (cols.indexOf('created_at') !== -1 && !obj.created_at) obj.created_at = now;
+        if (cols.indexOf('updated_at') !== -1 && !obj.updated_at) obj.updated_at = now;
+        if (cols.indexOf('id') !== -1 && !obj.id) obj.id = this.newId(table.slice(0, 3).toUpperCase());
+        return cols.map(c => (obj[c] === undefined || obj[c] === null ? '' : serialize(obj[c])));
+      });
+      withLock(() => {
+        const sh = sheet(table);
+        sh.getRange(sh.getLastRow() + 1, 1, rows.length, cols.length).setValues(rows);
       });
       delete cache[table];
       return rows.length;

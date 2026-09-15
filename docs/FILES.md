@@ -1,5 +1,5 @@
 # Every file in this project
-134 files. The **Phase** column says which build phase created it; "—" means it came later, with branding, the contract tests or version control.
+140 files. The **Phase** column says which build phase created it; "—" means it came later, with branding, the contract tests or version control.
 
 You do not need to understand any of these to run the site. The two that matter when installing are `admin/config.js` (where your engine address goes) and everything in `apps-script/` (which you paste into Google).
 
@@ -113,6 +113,7 @@ You do not need to understand any of these to run the site. The two that matter 
 | `apps-script/Schema.gs` | 1 | Every table definition, and setup(). |
 | `apps-script/SiteConfig.gs` | 5 | Navigation, homepage, categories, flags, settings, versions. |
 | `apps-script/Social.gs` | 7 | Writes social posts; a person sends them. |
+| `apps-script/Telemetry.gs` | — | One beacon per visit, buffered in cache, flushed in batches. |
 | `apps-script/Users.gs` | 1 | User administration, delegation, emergency access. |
 | `apps-script/appsscript.json` | 1 | Apps Script project settings and permissions. |
 
@@ -137,6 +138,7 @@ You do not need to understand any of these to run the site. The two that matter 
 | File | Phase | What it is |
 |---|---|---|
 | `tests/contract.js` | — | Publishes for real, then renders it with the real frontend. 22 checks. |
+| `tests/editor.js` | — | Does the editor lose work? Seven checks, including offline. |
 | `tests/harness.js` | 2 | Runs the engine under Node with Google stubbed out. |
 | `tests/phase10.js` | 10 | Billing and backup. 35 checks. |
 | `tests/phase2.js` | 2 | Invitations, ownership, submission gate. 47 checks. |
@@ -147,6 +149,7 @@ You do not need to understand any of these to run the site. The two that matter 
 | `tests/phase7.js` | 7 | Consent, unsubscribe, sending. 31 checks. |
 | `tests/phase8.js` | 8 | Issues and PDF. 22 checks. |
 | `tests/phase9.js` | 9 | Performance measurement. 19 checks. |
+| `tests/studio.js` | — | Does the studio answer quickly? Seven checks, in a browser. |
 
 ## Documentation and project files
 
@@ -161,6 +164,7 @@ You do not need to understand any of these to run the site. The two that matter 
 | `docs/FILES.md` | — | This list. |
 | `docs/INSTALL.md` | — | Step-by-step installation. Start here. |
 | `docs/OVERVIEW.md` | — | Master overview: what the site is, who uses it, how it works. |
+| `docs/PERFORMANCE-PLAN.md` | — | What was measured, what changed, and what is left. |
 | `docs/PHASE-1-STATUS.md` | 1 | What phase 1 built, what it did not, and the bugs found. |
 | `docs/PHASE-10-STATUS.md` | 10 | What phase 10 built, what it did not, and the bugs found. |
 | `docs/PHASE-2-STATUS.md` | 2 | What phase 2 built, what it did not, and the bugs found. |
@@ -175,9 +179,11 @@ You do not need to understand any of these to run the site. The two that matter 
 | `docs/SCHEMA.md` | 1 | The data model. |
 | `package.json` | — | Test commands. |
 | `tools/audit.js` | — | Release check: dead links, orphaned calls, committed secrets. |
+| `tools/bench.js` | — | Counts Google operations for the paths that run most often. |
 | `tools/genfiles.py` | — | Regenerates the file list from the repository. |
 | `tools/responsive.js` | — | Twelve layout checks: widths, scrolling, tap targets, safe areas. |
 | `tools/smoke.js` | — | Opens every page as a browser would, including its empty states. |
+| `tools/studio-bench.js` | — | Opens every studio screen and counts what each costs. |
 | `tools/verify.js` | — | One command that runs every check, backend and frontend. |
 
 ## Other
@@ -189,8 +195,8 @@ You do not need to understand any of these to run the site. The two that matter 
 
 ## Counts
 
-- Engine files to paste into Apps Script: **31 `.gs` files + `appsscript.json`**
+- Engine files to paste into Apps Script: **32 `.gs` files + `appsscript.json`**
 - Pages readers can visit: 11
 - Control centre screens: 22
-- Test files: 11, 324 checks in total
-- Total files: 134
+- Test files: 13, 324 checks in total
+- Total files: 140

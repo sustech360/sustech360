@@ -113,7 +113,7 @@ Open the spreadsheet. Tabs named `Users`, `Articles`, `Versions`, `AuditLogs`
 and others should exist, with a bold header row.
 *If they do not,* step 8 did not really succeed. Do not continue.
 
-**10. Add the five automatic jobs.**
+**10. Add the six automatic jobs.**
 ⏰ Triggers → Add trigger, five times:
 
 | Function | When |
@@ -123,6 +123,7 @@ and others should exist, with a bold header row.
 | `refreshAdSchedule` | Hourly |
 | `expireInvitations` | Daily |
 | `dailyBackup` | Daily |
+| `flushTelemetry` | Every 10 minutes |
 
 *Skip these and:* scheduled articles never publish, a newsletter stalls after
 the first batch, and you have no backups.

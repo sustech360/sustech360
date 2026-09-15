@@ -14,9 +14,9 @@
   /* A dropped connection is not a sign-out. The old build cleared the token on
      any failed request, so a single hiccup — an Apps Script cold start, a train
      tunnel — meant signing in again and losing what you were doing. */
-  var callThrough = api.call.bind(api);
-  api.call = function (action, payload) {
-    return callThrough(action, payload).then(function (data) {
+  var network = api.call.bind(api);
+  function send(action, payload) {
+    return network(action, payload).then(function (data) {
       touchToken();
       return data;
     }, function (e) {
@@ -25,6 +25,121 @@
       }
       throw e;
     });
+  }
+
+  /* ---- answering before the engine does ----
+   *
+   * Batching made the studio cost less. It did not make it feel quick: every
+   * screen still waited on a round trip to Apps Script, which can take a second
+   * or two to wake up.
+   *
+   * So a screen you have already opened paints immediately from what it showed
+   * last time, and the fresh answer arrives quietly behind it — if anything
+   * actually changed, the screen redraws. A screen you have not opened is
+   * usually already in hand too, because the four things most people click
+   * first are fetched in one batch the moment you sign in.
+   *
+   * Only reads are cached, and only in memory: nothing about users, invoices or
+   * subscribers is written to disk, and closing the tab forgets all of it.
+   * Anything that changes something clears the lot, because working out which
+   * screens a save affects is exactly the kind of cleverness that shows someone
+   * stale numbers a month later.
+   */
+
+  var READS = {
+    adDelivery: 1, adsBundle: 1, auditLog: 1, billing: 1, configurationVersions: 1,
+    editorialQueue: 1, emailIdentities: 1, emailLog: 1, emailTemplates: 1,
+    getEmailTemplate: 1, getGuideline: 1, getIssue: 1, getEmailCampaign: 1,
+    listCampaigns: 1, listEmailCampaigns: 1, listGrants: 1, listGuidelines: 1,
+    listIssues: 1, listRoles: 1, listUsers: 1, listBackups: 1, listInvitations: 1,
+    liveArticles: 1, me: 1, myReviews: 1, newsletterOverview: 1, openArticle: 1,
+    openReview: 1, payloadBudget: 1, performanceReport: 1, previewConfiguration: 1,
+    reviewCandidates: 1, articleReviews: 1, rulebook: 1, siteConfiguration: 1,
+    socialQueue: 1, studioDashboard: 1, guidelineKinds: 1
+  };
+
+  var CACHE = {};
+  var INFLIGHT = {};
+  var servedFromCache = false;      // did this render pass use anything stored?
+  var refreshes = [];               // background revalidations from this pass
+  var quiet = false;                // a redraw does not start another round
+
+  function cacheKey(action, payload) {
+    return action + '|' + JSON.stringify(payload || {});
+  }
+
+  api.call = function (action, payload) {
+    if (!READS[action]) {
+      // Something changed. Everything held is now suspect.
+      CACHE = {};
+      return send(action, payload);
+    }
+    var key = cacheKey(action, payload);
+
+    // The same question asked twice in one breath is asked once.
+    if (INFLIGHT[key]) return INFLIGHT[key];
+
+    if (Object.prototype.hasOwnProperty.call(CACHE, key)) {
+      servedFromCache = true;
+      if (!quiet) {
+        refreshes.push(send(action, payload).then(function (data) {
+          var moved = JSON.stringify(data) !== JSON.stringify(CACHE[key]);
+          CACHE[key] = data;
+          return moved;
+        }, function () { return false; }));     // a failed refresh keeps the old view
+      }
+      return Promise.resolve(CACHE[key]);
+    }
+
+    var request = send(action, payload).then(function (data) {
+      CACHE[key] = data;
+      delete INFLIGHT[key];
+      return data;
+    }, function (e) {
+      delete INFLIGHT[key];
+      throw e;
+    });
+    INFLIGHT[key] = request;
+    return request;
+  };
+
+  /** Fetches what the next click probably needs. One batch, one execution, and
+   *  it warms the engine at the same time so the first real click is not the
+   *  one that pays for the cold start. */
+  function prefetch(actions) {
+    actions.forEach(function (a) {
+      var key = cacheKey(a, {});
+      if (!Object.prototype.hasOwnProperty.call(CACHE, key) && !INFLIGHT[key]) {
+        api.call(a, {}).catch(function () {});
+      }
+    });
+  }
+
+  /** What each screen asks for first, so hovering a menu item is enough to
+   *  have the answer ready by the time it is clicked. */
+  var NEEDS = {
+    dashboard: ['studioDashboard'],
+    queue: ['editorialQueue'],
+    reviews: ['myReviews'],
+    published: ['liveArticles'],
+    issues: ['listIssues'],
+    users: ['listUsers', 'listRoles'],
+    roles: ['listRoles'],
+    audit: ['auditLog'],
+    guidelines: ['listGuidelines'],
+    rulebook: ['rulebook'],
+    menus: ['siteConfiguration'],
+    homepage: ['siteConfiguration'],
+    sections: ['siteConfiguration'],
+    appearance: ['siteConfiguration'],
+    publish: ['previewConfiguration', 'configurationVersions'],
+    delegation: ['listGrants', 'listUsers'],
+    advertising: ['adsBundle', 'adDelivery'],
+    billing: ['billing'],
+    newsletter: ['newsletterOverview', 'listEmailCampaigns'],
+    emails: ['emailTemplates', 'emailIdentities', 'emailLog'],
+    social: ['socialQueue'],
+    performance: ['performanceReport', 'payloadBudget']
   };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -162,6 +277,8 @@
   });
 
   $('signout').addEventListener('click', function () {
+    CACHE = {};
+    INFLIGHT = {};
     api.call('logout').catch(function () {}).then(function () {
       clearToken(); location.reload();
     });
@@ -182,6 +299,10 @@
       home.addEventListener('click', function () { render('dashboard'); closeNav(); });
     }
     api.call('health').then(function (h) { $('env').textContent = h.env; }).catch(function () {});
+
+    // The four things most people open first, in one batch. It also wakes the
+    // engine, so the first real click is not the one that waits for it.
+    prefetch(['studioDashboard', 'editorialQueue', 'siteConfiguration', 'liveArticles']);
     render(forcePassword ? 'account' : 'dashboard');
     if (forcePassword) {
       message($('view').querySelector('#accountmsg') || $('view'),
@@ -259,6 +380,11 @@
       group[1].forEach(function (item) {
         var b = el('button', { type: 'button', 'data-view': item[0], text: item[1] });
         b.addEventListener('click', function () { render(item[0]); closeNav(); });
+        // Reaching for a menu item is enough warning to go and get it.
+        var warm = function () { prefetch(NEEDS[item[0]] || []); };
+        b.addEventListener('mouseenter', warm);
+        b.addEventListener('focus', warm);
+        b.addEventListener('touchstart', warm, { passive: true });
         box.appendChild(b);
       });
       host.appendChild(box);
@@ -327,13 +453,54 @@
 
   /* ---- views ---- */
 
-  function render(name, arg) {
+  var showing = null;
+
+  function render(name, arg, redraw) {
     var v = $('view');
-    v.innerHTML = '<p class="hint">Loading…</p>';
+    showing = name;
+    servedFromCache = false;
+    refreshes = [];
+
     $('viewtitle').textContent = titleOf(name);
     markActive(name);
-    v.scrollIntoView ? window.scrollTo(0, 0) : null;
+
+    // A screen that has been open before paints from what it showed last time,
+    // so there is nothing to look at while the engine wakes up. Only a screen
+    // with nothing behind it shows a placeholder.
+    var scroll = redraw ? (window.scrollY || 0) : 0;
+    v.innerHTML = '<p class="hint">Loading…</p>';
+    if (!redraw) { try { window.scrollTo(0, 0); } catch (e) {} }
+
     (VIEWS[name] || VIEWS.dashboard)(v, arg);
+
+    if (redraw) {
+      setTimeout(function () { try { window.scrollTo(0, scroll); } catch (e) {} }, 0);
+      return;
+    }
+
+    // Whatever was served from store is now being checked behind the screen.
+    setTimeout(function () {
+      if (!refreshes.length) return;
+      var pending = refreshes.slice();
+      busy(true);
+      Promise.all(pending).then(function (moved) {
+        busy(false);
+        if (showing !== name) return;                 // they have moved on
+        if (!moved.some(Boolean)) return;             // nothing actually changed
+        quiet = true;
+        render(name, arg, true);
+        quiet = false;
+      });
+    }, 0);
+  }
+
+  /** A quiet mark in the corner while something is being checked. Never a
+   *  spinner over the screen: the screen is readable, and it is almost always
+   *  already right. */
+  function busy(on) {
+    var bar = $('viewtitle');
+    if (!bar) return;
+    bar.classList.toggle('is-checking', !!on);
   }
 
   /** A minimal element helper for view files that build nodes rather than
@@ -355,23 +522,16 @@
      *  one permission is missing is a screen nobody trusts. Whatever the person
      *  is entitled to see appears; the rest is quietly absent. */
     dashboard: function (v) {
-      var ask = function (action, payload) {
-        return api.call(action, payload).catch(function () { return null; });
-      };
-
       v.innerHTML = '<p class="hint">Gathering what needs you…</p>';
 
-      Promise.all([
-        ask('editorialQueue'),
-        ask('myReviews'),
-        ask('previewConfiguration'),
-        ask('adsBundle'),
-        ask('newsletterOverview'),
-        ask('listBackups'),
-        ask('performanceReport', {})
-      ]).then(function (r) {
-        var queue = r[0], reviews = r[1], pending = r[2], ads = r[3];
-        var news = r[4], backups = r[5], perf = r[6];
+      // One request, one Apps Script execution, one pass over each table.
+      // Seven separate calls meant seven of each, every time the tool opened.
+      api.call('studioDashboard').then(function (d) {
+        var queue = d.queue, reviews = d.reviews === null ? null : { length: d.reviews };
+        var pending = d.pending === null ? null : { pending: d.pending };
+        var ads = d.ads === null ? null : { creatives: new Array(d.ads).fill({ status: 'PENDING' }) };
+        var news = d.newsletter, backups = d.backups ? [d.backups] : (d.backups === null ? null : []);
+        var perf = null;
         var tiles = [];
 
         function tile(n, label, note, view, tone) {

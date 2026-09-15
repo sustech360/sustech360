@@ -163,6 +163,70 @@ const Auth = {
     return String(bin % 1000000).padStart(6, '0');
   },
 
+  /* ---- enrolling in two-factor ----
+     A secret is generated, shown once, and only becomes real when the person
+     types back a code from it. Until that moment the account is untouched, so
+     an abandoned setup leaves nothing half-enabled. */
+
+  base32Encode: function (bytes) {
+    const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = 0, value = 0, out = '';
+    for (let i = 0; i < bytes.length; i++) {
+      value = (value << 8) | (bytes[i] & 0xff);
+      bits += 8;
+      while (bits >= 5) { out += A[(value >>> (bits - 5)) & 31]; bits -= 5; }
+    }
+    if (bits > 0) out += A[(value << (5 - bits)) & 31];
+    return out;
+  },
+
+  /** Begins enrolment: a fresh secret, stored but not yet in force. */
+  beginMfa: function (session) {
+    const raw = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,
+      Utilities.getUuid() + Utilities.getUuid() + Date.now()).slice(0, 20);
+    const secret = this.base32Encode(raw);
+    Db.update('Users', { id: session.user.id }, { mfa_secret: secret, mfa_enabled: false });
+    const label = encodeURIComponent('S360 Editorial Studio') + ':' + encodeURIComponent(session.user.email);
+    Audit.log(session, 'MFA_ENROLMENT_STARTED', 'user', session.user.id, {});
+    return {
+      secret: secret,
+      otpauth: 'otpauth://totp/' + label + '?secret=' + secret +
+               '&issuer=' + encodeURIComponent('S360 Editorial Studio') + '&period=30&digits=6'
+    };
+  },
+
+  /** Turns it on, but only once a code proves the app and the secret agree.
+   *  Enabling on trust would lock the person out of their own account. */
+  enableMfa: function (session, code) {
+    const user = Db.findOne('Users', { id: session.user.id });
+    if (!user || !user.mfa_secret) throw new ApiFail('not_started', 'start the setup first');
+    if (!this.verifyTotp(user.mfa_secret, code)) throw new ApiFail('bad_code', 'that code did not match');
+    Db.update('Users', { id: user.id }, { mfa_enabled: true });
+    Audit.log(session, 'MFA_ENABLED', 'user', user.id, {});
+    return { ok: true, enabled: true };
+  },
+
+  /** Turning it off needs a current code too: someone at a borrowed keyboard
+   *  should not be able to remove it. */
+  disableMfa: function (session, code) {
+    const user = Db.findOne('Users', { id: session.user.id });
+    if (!user || !(user.mfa_enabled === true || user.mfa_enabled === 'TRUE')) {
+      throw new ApiFail('not_enabled');
+    }
+    if (!this.verifyTotp(user.mfa_secret, code)) throw new ApiFail('bad_code');
+    Db.update('Users', { id: user.id }, { mfa_enabled: false, mfa_secret: '' });
+    Audit.log(session, 'MFA_DISABLED', 'user', user.id, {});
+    return { ok: true, enabled: false };
+  },
+
+  mfaState: function (session) {
+    const user = Db.findOne('Users', { id: session.user.id });
+    return {
+      enabled: !!user && (user.mfa_enabled === true || user.mfa_enabled === 'TRUE'),
+      started: !!(user && user.mfa_secret)
+    };
+  },
+
   base32Decode: function (s) {
     const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     s = String(s).toUpperCase().replace(/=+$/, '').replace(/\s/g, '');

@@ -265,17 +265,40 @@
         paintMedia();
         countWords();
 
+        // Anything written on this device that never reached the engine — a
+        // train, a closed laptop — is still here. Put it back before the author
+        // notices it is missing.
+        if (editable) {
+          var held = heldLocally(a.id);
+          if (held && held.pending && Object.keys(held.pending.fields || {}).length) {
+            Object.keys(held.pending.fields).forEach(function (k) {
+              var box = document.getElementById('f-' + k);
+              if (box) box.value = held.pending.fields[k];
+              pending.fields[k] = held.pending.fields[k];
+            });
+            Object.keys(held.pending.meta || {}).forEach(function (k) {
+              pending.meta[k] = held.pending.meta[k];
+              if (k === 'title' && $('e-title')) $('e-title').value = held.pending.meta[k];
+            });
+            dirty = true;
+            $('e-msg').innerHTML = '<div class="msg ok">Work from this device that had not been sent ' +
+              'is back in the boxes. It will go as soon as there is a connection.</div>';
+            setTimeout(function () { sync(false); }, 800);
+          }
+        }
+
         if (editable) {
           v.querySelectorAll('textarea, #e-title').forEach(function (n) {
             n.addEventListener('input', function () {
-              dirty = true;
-              $('savestate').textContent = 'Unsaved changes';
+              if (n.id === 'e-title') changedMeta('title', n.value.trim());
+              else changed(n.id.replace(/^f-/, ''), n.value);
               countWords();
             });
           });
           $('save').addEventListener('click', function () { save(true); });
           $('submit').addEventListener('click', openChecklist);
-          timer = setInterval(function () { if (dirty) save(false); }, 20000);
+          // A long sitting still reaches the engine even without a pause.
+          timer = setInterval(function () { if (dirty) { collectInto(pending); sync(false); } }, 60000);
           wireMediaForm();
         }
         if ($('revise')) {
@@ -381,21 +404,155 @@
     if (el) el.textContent = txt;
   }
 
-  function save(explicit) {
+  /* ---- writing happens here, not over there ----
+   *
+   * Typing goes into memory and onto this device immediately. Nothing waits on
+   * the network, and a dropped connection costs nothing: the work is already
+   * saved where the author is sitting.
+   *
+   * What travels is a changeset — the fields that actually moved since the last
+   * sync — sent when the typing pauses rather than on a timer, so a paragraph
+   * written in one sitting is one request instead of six. The engine merges it
+   * field by field, so a second window editing a different section does not
+   * wipe this one.
+   */
+
+  var LOCAL_KEY = 's360.draft.';
+  var pending = { fields: {}, meta: {} };   // what has not reached the engine yet
+  var base = null;                          // what the engine last told us it held
+  var syncing = false, syncTimer = null, retryIn = 0;
+
+  function localKey() { return LOCAL_KEY + (current && current.article ? current.article.id : 'none'); }
+
+  function keepLocally() {
+    try {
+      localStorage.setItem(localKey(), JSON.stringify({
+        fields: collect(),
+        title: $('e-title') ? $('e-title').value : '',
+        at: Date.now(),
+        pending: pending
+      }));
+    } catch (e) {}
+  }
+
+  function heldLocally(articleId) {
+    try { return JSON.parse(localStorage.getItem(LOCAL_KEY + articleId) || 'null'); }
+    catch (e) { return null; }
+  }
+
+  function forgetLocally() {
+    try { localStorage.removeItem(localKey()); } catch (e) {}
+  }
+
+  /** Records one field change and schedules a sync for when the typing stops. */
+  function changed(field, value) {
+    pending.fields[field] = value;
+    dirty = true;
+    keepLocally();
+    say_state('Saved on this device');
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () { sync(false); }, 2500);
+  }
+
+  function changedMeta(key, value) {
+    pending.meta[key] = value;
+    dirty = true;
+    keepLocally();
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () { sync(false); }, 2500);
+  }
+
+  function say_state(text) {
     var state = $('savestate');
-    if (state) state.textContent = 'Saving…';
-    return api.call('saveDraft', {
-      article_id: current.article.id, fields: collect(), title: $('e-title').value.trim()
+    if (state) state.textContent = text;
+  }
+
+  /** Sends everything queued, in one request. */
+  function sync(explicit) {
+    if (!current || !current.article) return Promise.resolve();
+    if (syncing) return Promise.resolve();
+    var fields = pending.fields, meta = pending.meta;
+    if (!Object.keys(fields).length && !Object.keys(meta).length) {
+      if (explicit) say_state('Nothing to send');
+      return Promise.resolve();
+    }
+
+    syncing = true;
+    pending = { fields: {}, meta: {} };       // take it off the queue while it flies
+    say_state('Sending…');
+
+    return api.call('syncDraft', {
+      article_id: current.article.id,
+      changes: { fields: fields, meta: meta },
+      base: base
     }).then(function (r) {
-      dirty = false;
-      if (state) state.textContent = 'Saved ' + new Date(r.saved_at).toLocaleTimeString();
+      syncing = false;
+      retryIn = 0;
+      base = r.saved_at || base;
+      dirty = Object.keys(pending.fields).length > 0 || Object.keys(pending.meta).length > 0;
+      if (!dirty) forgetLocally(); else keepLocally();
+      say_state('Saved ' + (r.saved_at ? new Date(r.saved_at).toLocaleTimeString() : ''));
+
+      if (r.merged_with_other_changes && r.fields) {
+        // Someone — probably this author in another window — wrote while this
+        // one was typing. Both sets are safe; the screen catches up.
+        Object.keys(r.fields).forEach(function (k) {
+          var box = document.getElementById('f-' + k);
+          if (box && !pending.fields[k] && box.value !== r.fields[k]) box.value = r.fields[k];
+        });
+        $('e-msg').innerHTML = '<div class="msg ok">This draft was also edited elsewhere. ' +
+          'Both sets of changes were kept, and this screen has caught up.</div>';
+      }
+      countWords();
       return r;
     }).catch(function (e) {
-      if (state) state.textContent = 'Not saved';
+      syncing = false;
+      // Put it back and try again later. The work is on the device either way.
+      Object.keys(fields).forEach(function (k) {
+        if (!(k in pending.fields)) pending.fields[k] = fields[k];
+      });
+      Object.keys(meta).forEach(function (k) {
+        if (!(k in pending.meta)) pending.meta[k] = meta[k];
+      });
+      keepLocally();
+
+      if (e && e.code === 'locked') {
+        say_state('With the editors — not saved');
+        if (explicit) throw e;
+        return null;
+      }
+      say_state('Saved here, waiting to send');
       if (explicit) $('e-msg').innerHTML = '<div class="msg err">' + esc(say(e)) + '</div>';
-      throw e;
+
+      retryIn = Math.min(retryIn ? retryIn * 2 : 5000, 60000);
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(function () { sync(false); }, retryIn);
+
+      // A sync the author did not ask for must not end as an unhandled
+      // rejection in their console. It failed, it is queued, it will go.
+      if (explicit) throw e;
+      return null;
     });
   }
+
+  /** The old name, kept because submission and the save button use it. */
+  function save(explicit) {
+    // Anything typed but not yet queued — the last keystroke, say — goes now.
+    collectInto(pending);
+    return sync(explicit === undefined ? true : explicit);
+  }
+
+  /** Sweeps the current boxes into the queue, for a save that must be complete. */
+  function collectInto(queue) {
+    var fields = collect();
+    Object.keys(fields).forEach(function (k) { queue.fields[k] = fields[k]; });
+    if ($('e-title')) queue.meta.title = $('e-title').value.trim();
+  }
+
+  // Leaving the page, or hiding it, sends whatever is waiting.
+  addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden' && dirty) { collectInto(pending); sync(false); }
+  });
 
   function openChecklist() {
     save(true).then(function () {

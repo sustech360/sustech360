@@ -80,6 +80,65 @@ const Articles = {
   },
 
   /** Autosave and manual save both land here. Saving never changes status. */
+  /** Takes everything the author has changed since the last sync and applies it
+   *  in one go.
+   *
+   *  Two differences from save(), and both matter. It merges field by field
+   *  rather than replacing the whole payload, so a second window editing a
+   *  different section does not quietly wipe the first. And it reports what the
+   *  server now holds, so the editor can reconcile rather than guess.
+   *
+   *  One execution, one read of the payload, one write to Drive, one row
+   *  update, whatever the author did in between.
+   */
+  sync: function (session, p) {
+    const a = this.mustOwn_(session, p.article_id);
+    const v = this.workingVersion_(a);
+    if (['DRAFT', 'REVISION_REQUIRED'].indexOf(v.status) === -1) {
+      throw new ApiFail('locked', 'this version is with the editors; open a new revision to keep writing');
+    }
+
+    const changes = p.changes || {};
+    const fields = changes.fields || {};
+    const meta = changes.meta || {};
+    if (!Object.keys(fields).length && !Object.keys(meta).length) {
+      return { ok: true, saved_at: '', unchanged: true };
+    }
+
+    const held = v.payload_ref ? this.readPayload_(v.payload_ref) : { fields: {} };
+    held.fields = held.fields || {};
+
+    // Somebody else has written since this editor last heard from us. The
+    // merge still happens — losing an author's paragraph to a race is worse
+    // than an occasional surprise — but the answer says so.
+    const moved = !!(p.base && held.updated_at && p.base !== held.updated_at);
+
+    Object.keys(fields).forEach(key => {
+      if (!/^[a-z0-9_]{2,40}$/.test(key)) throw new ApiFail('bad_field', key);
+      held.fields[key] = String(fields[key] == null ? '' : fields[key]);
+    });
+    held.updated_at = new Date().toISOString();
+
+    this.writePayload_(a.id, Number(v.version), held, v.payload_ref);
+
+    const row = {};
+    ['title', 'category', 'level'].forEach(k => { if (meta[k] != null) row[k] = meta[k]; });
+    if (meta.topics) row.topics = JSON.stringify(meta.topics);
+    if (meta.tags) row.tags = JSON.stringify(meta.tags);
+    if (Object.keys(row).length) Db.update('Articles', { id: a.id }, row);
+
+    return {
+      ok: true,
+      saved_at: held.updated_at,
+      words: this.wordCount_(held),
+      version: Number(v.version),
+      merged_with_other_changes: moved,
+      // What the server holds now, so a window that was behind can catch up
+      // without the author retyping anything.
+      fields: moved ? held.fields : undefined
+    };
+  },
+
   save: function (session, p) {
     const a = this.mustOwn_(session, p.article_id);
     const v = this.workingVersion_(a);

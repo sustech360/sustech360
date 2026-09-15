@@ -21,6 +21,11 @@ const PUBLIC_ACTIONS = {
   // rules: validate everything, count, return nothing else.
   recordVitals: (s, p) => Performance.record(p && p.events),
 
+  // One beacon per visit carrying both advertising and page speed. Two calls
+  // meant two Apps Script executions for every reader; this is one, and it
+  // writes to a cache rather than a spreadsheet.
+  recordTelemetry: (s, p) => Telemetry.record(p),
+
   // Subscription, confirmation and — above all — unsubscribe. Unsubscribing
   // must work from a link in an old email with no account and no session, so it
   // lives here by necessity and is written to be safe there.
@@ -39,10 +44,57 @@ const PUBLIC_ACTIONS = {
 };
 
 const ACTIONS = {
+  /** Several actions, one execution.
+   *
+   *  A screen in the studio typically needs two or three things at once — the
+   *  article and its reviewers, the templates and the identities and the log.
+   *  Sent separately that is three Apps Script executions, three cold starts
+   *  and three passes over the same tables. Sent together it is one of each:
+   *  Db caches every table it reads for the life of a request, so the second
+   *  and third actions read from memory rather than from the spreadsheet.
+   *
+   *  Each call is authorised on its own — batching changes how requests
+   *  travel, never what the person is allowed to do — and each fails on its
+   *  own, so one refusal does not discard the answers beside it.
+   */
+  batch: (s, p, meta) => {
+    const calls = (p && p.calls) || [];
+    if (!Array.isArray(calls) || !calls.length) throw new ApiFail('empty_batch');
+    if (calls.length > 12) throw new ApiFail('batch_too_large', 'twelve at a time');
+
+    return {
+      results: calls.map(call => {
+        const action = String((call && call.action) || '');
+
+        // Public actions are refused here. Signing in through a batch would let
+        // a dozen password attempts share one execution, and the rate limit
+        // counts executions.
+        if (PUBLIC_ACTIONS[action]) return { ok: false, error: 'not_batchable', detail: action };
+        if (action === 'batch') return { ok: false, error: 'not_batchable', detail: 'no nesting' };
+        if (!ACTIONS[action]) return { ok: false, error: 'unknown_action', detail: action };
+
+        try {
+          return { ok: true, data: ACTIONS[action](s, call.payload || {}, meta) };
+        } catch (err) {
+          if (err instanceof ApiFail) return { ok: false, error: err.code, detail: err.detail };
+          console.error(err.stack || err.message);
+          return { ok: false, error: 'server_error' };
+        }
+      })
+    };
+  },
+
   me: (s) => ({ user: Auth.publicUser(s.user), permissions: Perms.effective(s.user) }),
   logout: (s) => { Auth.logout(s); return { ok: true }; },
   logoutEverywhere: (s) => { Auth.logoutEverywhere(s); return { ok: true }; },
   changePassword: (s, p) => Auth.changePassword(s, p.current, p.next),
+
+  /* ---- two-factor, enrolled by the person who will use it ---- */
+
+  mfaState: (s) => Auth.mfaState(s),
+  beginMfa: (s) => Auth.beginMfa(s),
+  enableMfa: (s, p) => Auth.enableMfa(s, p.code),
+  disableMfa: (s, p) => Auth.disableMfa(s, p.code),
 
   listUsers: (s) => Users.list(s),
   inviteUser: (s, p) => Users.invite(s, p),
@@ -83,6 +135,7 @@ const ACTIONS = {
   getArticle: (s, p) => Articles.get(s, p),
   createDraft: (s, p) => Articles.create(s, p),
   saveDraft: (s, p) => Articles.save(s, p),
+  syncDraft: (s, p) => Articles.sync(s, p),
   submitArticle: (s, p) => Articles.submit(s, p),
   withdrawArticle: (s, p) => Articles.withdraw(s, p),
   startRevision: (s, p) => Articles.startRevision(s, p),
@@ -192,7 +245,47 @@ const ACTIONS = {
   buildIssuePdf: (s, p) => Issues.buildPdf(s, p),
   publishIssue: (s, p) => Publish.issue(s, p),
 
+  /* ---- the email centre ---- */
+
+  emailTemplates: (s) => EmailCentre.list(s),
+  getEmailTemplate: (s, p) => EmailCentre.get(s, p),
+  saveEmailTemplate: (s, p) => EmailCentre.save(s, p),
+  resetEmailTemplate: (s, p) => EmailCentre.reset(s, p),
+  previewEmailTemplate: (s, p) => EmailCentre.preview(s, p),
+  sendTestEmail: (s, p) => EmailCentre.sendTest(s, p),
+  emailIdentities: (s) => { Perms.require(s, 'MANAGE'); return Email.identities(); },
+  saveEmailIdentities: (s, p) => EmailCentre.saveIdentities(s, p),
+  emailLog: (s, p) => EmailCentre.log(s, p),
+
+  /* ---- what is live, and correcting it ---- */
+
+  liveArticles: (s, p) => Publish.liveIndex(s, p),
+  correctLiveArticle: (s, p) => Publish.updateLive(s, p),
+
   /* ---- phase 9: performance ---- */
+
+  /** Everything the studio's opening screen needs, in one execution.
+   *  Five separate calls meant five executions and five passes over the same
+   *  tables every time somebody opened the tool. */
+  studioDashboard: (s) => {
+    Perms.require(s, 'VIEW');
+    const out = { queue: null, reviews: null, pending: null, ads: null, newsletter: null, backups: null };
+    const attempt = (key, fn) => { try { out[key] = fn(); } catch (e) { out[key] = null; } };
+    attempt('queue', () => Editorial.queue(s, {}).map(a => ({ id: a.id, version_status: a.version_status })));
+    attempt('reviews', () => Reviews.mine(s).length);
+    attempt('pending', () => SiteConfig.pending(s).count);
+    attempt('ads', () => Db.all('AdCreatives').filter(c => c.status === 'PENDING').length);
+    attempt('newsletter', () => {
+      const subs = Db.all('Subscribers');
+      return { confirmed: subs.filter(x => x.status === 'CONFIRMED').length,
+               pending: subs.filter(x => x.status === 'PENDING').length };
+    });
+    attempt('backups', () => {
+      const last = Db.all('Backups').sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0];
+      return last ? { created_at: last.created_at, verified_at: last.verified_at || '' } : null;
+    });
+    return out;
+  },
 
   performanceReport: (s, p) => Performance.report(s, p),
   payloadBudget: (s) => Performance.budget(s),

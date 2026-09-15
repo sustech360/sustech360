@@ -135,6 +135,8 @@ const Performance = {
       since: since,
       samples: rows.reduce((n, v) => n + Number(v.count || 0), 0),
       caveat: 'Measured in readers\' browsers. Blocked scripts, cached pages and abandoned loads are not counted, so treat small sample counts as anecdotes.',
+      // Counts arrive in batches, so the last few minutes are not here yet.
+      awaiting_flush: (function () { try { return Telemetry.pending(); } catch (e) { return 0; } })(),
       metrics: metrics,
       problems: metrics.filter(m => m.rating !== 'good' && m.samples >= 10)
     };

@@ -123,21 +123,106 @@
 
   AppsScriptSource.prototype.setToken = function (t) { this.token = t || null; };
 
-  AppsScriptSource.prototype.call = function (action, payload) {
-    if (!this.endpoint) return Promise.reject(new ApiError('no_endpoint', action));
-    var body = JSON.stringify({ action: action, token: this.token, payload: payload || {} });
+  /* Anything that has to travel on its own: signing in, and the beacons, which
+     carry no session. Everything else is queued and sent together. */
+  var NEVER_BATCHED = {
+    login: 1, health: 1, batch: 1,
+    subscribe: 1, confirmSubscription: 1, unsubscribe: 1,
+    getInvitation: 1, acceptInvitation: 1,
+    recordTelemetry: 1, recordAdEvents: 1, recordVitals: 1
+  };
+
+  AppsScriptSource.prototype.post_ = function (body) {
+    if (!this.endpoint) return Promise.reject(new ApiError('no_endpoint', 'request'));
     return fetch(this.endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: body,
+      body: JSON.stringify(body),
       redirect: 'follow',
       credentials: 'omit'
-    }).then(function (r) { return r.json(); }).then(function (res) {
+    }).then(function (r) { return r.json(); }, function () { throw new ApiError('offline', 'request'); });
+  };
+
+  function unwrap(res, action) {
+    if (!res || res.ok !== true) {
+      throw new ApiError((res && res.error) || 'request_failed', (res && res.detail) || action);
+    }
+    return res.data;
+  }
+
+  /**
+   * Calls made in the same tick travel together.
+   *
+   * A screen usually asks for two or three things at once. Sent separately that
+   * is three requests and three Apps Script executions, each with its own cold
+   * start; sent together it is one, and the engine reads each table once for
+   * the whole batch. Nothing above this changed — the queue collects whatever
+   * was asked for before the browser next paints, and hands back the same
+   * promises.
+   */
+  AppsScriptSource.prototype.call = function (action, payload) {
+    if (!this.endpoint) return Promise.reject(new ApiError('no_endpoint', action));
+
+    if (NEVER_BATCHED[action]) {
+      var self = this;
+      return this.post_({ action: action, token: this.token, payload: payload || {} })
+        .then(function (res) { return unwrap(res, action); });
+    }
+
+    var api = this;
+    var entry = { action: action, payload: payload || {} };
+    var promise = new Promise(function (resolve, reject) {
+      entry.resolve = resolve;
+      entry.reject = reject;
+    });
+    api.queue = api.queue || [];
+    api.queue.push(entry);
+
+    // Twelve is the engine's limit for one batch; send early rather than split
+    // awkwardly at the far end.
+    if (api.queue.length >= 12) api.flushQueue_();
+    else if (!api.scheduled) {
+      api.scheduled = true;
+      setTimeout(function () { api.flushQueue_(); }, 0);
+    }
+    return promise;
+  };
+
+  AppsScriptSource.prototype.flushQueue_ = function () {
+    var api = this;
+    api.scheduled = false;
+    var batch = (api.queue || []).splice(0, 12);
+    if (!batch.length) return;
+
+    // One call on its own does not need the wrapper.
+    if (batch.length === 1) {
+      var only = batch[0];
+      api.post_({ action: only.action, token: api.token, payload: only.payload })
+        .then(function (res) { only.resolve(unwrap(res, only.action)); }, only.reject);
+      return;
+    }
+
+    api.post_({
+      action: 'batch',
+      token: api.token,
+      payload: { calls: batch.map(function (c) { return { action: c.action, payload: c.payload }; }) }
+    }).then(function (res) {
       if (!res || res.ok !== true) {
-        throw new ApiError((res && res.error) || 'request_failed', (res && res.detail) || action);
+        // The batch itself was refused — an expired session, most likely. Every
+        // caller hears the same thing they would have heard alone.
+        var outer = new ApiError((res && res.error) || 'request_failed', (res && res.detail) || 'batch');
+        batch.forEach(function (c) { c.reject(outer); });
+        return;
       }
-      return res.data;
-    }, function () { throw new ApiError('offline', action); });
+      (res.data.results || []).forEach(function (r, i) {
+        var c = batch[i];
+        if (!c) return;
+        if (r && r.ok === true) c.resolve(r.data);
+        else c.reject(new ApiError((r && r.error) || 'request_failed', (r && r.detail) || c.action));
+      });
+    }, function (e) {
+      batch.forEach(function (c) { c.reject(e); });
+    });
   };
 
   // Named methods mirror the public source where the shapes overlap, so admin

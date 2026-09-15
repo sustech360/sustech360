@@ -55,15 +55,27 @@
     return resolve(section).then(function (items) {
       var fresh = items.filter(function (a) { return a && !used[a.slug]; });
       if (!fresh.length) return;
+
+      // The lead block takes the top story and up to three beside it, then
+      // stands back: everything below it is the rest of the paper, not more
+      // attempts at the same headline.
+      if (section.type === 'hero') {
+        var block = fresh.length >= 4 ? fresh.slice(0, 4) : fresh.slice(0, 1);
+        block.forEach(function (a) { used[a.slug] = true; });
+        host.appendChild(leadBlock(block));
+        return;
+      }
+
       if (section.count) fresh = fresh.slice(0, section.count);
       fresh.forEach(function (a) { used[a.slug] = true; });
 
-      if (section.type === 'hero') { host.appendChild(hero(fresh[0])); return; }
-
       var wrap = el('section', { class: 'section' });
       wrap.appendChild(heading(section));
-      var body = el('div', { class: section.layout === 'grid' ? 'grid' : 'rows' });
-      fresh.forEach(function (a) { body.appendChild(Site.card(a, { summary: section.layout !== 'grid' })); });
+      var grid = section.layout === 'grid';
+      var body = el('div', { class: grid ? 'grid' : 'rows' });
+      fresh.forEach(function (a) {
+        body.appendChild(Site.card(a, { summary: !grid, grid: grid }));
+      });
       wrap.appendChild(body);
       host.appendChild(wrap);
     });
@@ -111,18 +123,40 @@
     return API.listArticles({ count: room });
   }
 
+  /** The lead: one story given room, with the next few in a column beside it. */
+  function leadBlock(items) {
+    var block = el('section', { class: 'leadblock' });
+    block.appendChild(hero(items[0]));
+    // On a young archive a four-story lead block leaves one article for
+    // everything below it. The column appears once there is enough to fill the
+    // page underneath as well.
+    if (items.length >= 4) {
+      var side = el('aside', { class: 'leadblock__side' });
+      side.appendChild(el('div', { class: 'leadblock__sidehead', text: 'Also today' }));
+      items.slice(1, 4).forEach(function (a) {
+        side.appendChild(Site.card(a, { summary: false, compact: true }));
+      });
+      block.appendChild(side);
+    }
+    return block;
+  }
+
   function hero(a) {
     var href = MAG.join('article.html?a=' + encodeURIComponent(a.slug));
     var section = a.category_name || String(a.category || '').replace(/-/g, ' ');
-    var meta = el('div', { class: 'meta' });
+    var meta = el('div', { class: 'meta byline' });
     if (a.authors && a.authors[0]) {
-      meta.appendChild(el('span', { class: 'by', text: a.authors[0].name + (a.authors[0].institution ? ', ' + a.authors[0].institution : '') }));
+      meta.appendChild(el('span', {
+        class: 'byline__by',
+        text: a.authors[0].name + (a.authors[0].institution ? ', ' + a.authors[0].institution : '')
+      }));
     }
     meta.appendChild(el('span', { text: Site.fmtDate(a.published_at) }));
     if (a.reading_minutes) meta.appendChild(el('span', { text: a.reading_minutes + ' min read' }));
+    if (a.sponsored) meta.appendChild(el('span', { class: 'byline__flag', text: 'Sponsored' }));
     return el('div', { class: 'lead' }, [
       section ? el('a', {
-        class: 'kicker',
+        class: 'kicker badge',
         href: MAG.join('category.html?c=' + encodeURIComponent(a.category || '')),
         text: section
       }) : null,

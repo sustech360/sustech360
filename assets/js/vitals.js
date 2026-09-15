@@ -59,9 +59,18 @@
     var events = Object.keys(collected).map(function (m) {
       return { m: m, v: collected[m], p: page, d: device };
     });
-    if (!events.length) return;
+
+    // Whatever the advertising counter has gathered rides along. Two beacons
+    // meant two Apps Script executions for every reader; this is one.
+    var ads = [];
+    try { if (global.Site && Site.adCounter) ads = Site.adCounter().drain(); } catch (e) {}
+
+    if (!events.length && !ads.length) return;
     sent = true;
-    var body = JSON.stringify({ action: 'recordVitals', payload: { events: events.slice(0, 12) } });
+    var body = JSON.stringify({
+      action: 'recordTelemetry',
+      payload: { vitals: events.slice(0, 12), ads: ads }
+    });
     try {
       if (navigator.sendBeacon) {
         navigator.sendBeacon(global.MAG_ENDPOINT, new Blob([body], { type: 'text/plain;charset=utf-8' }));

@@ -171,22 +171,53 @@
 
   /* ---- article cards ---- */
 
+  /** The section label that sits above a headline. A link where the section is
+   *  known, plain text where it is not — a search result carries a section name
+   *  but no slug, and a badge that goes nowhere is worse than one that is not
+   *  a link at all. */
+  function badge(a) {
+    var name = a.category_name || String(a.category || '').replace(/-/g, ' ');
+    if (!name) return null;
+    if (!a.category) return el('span', { class: 'badge', text: name });
+    return el('a', {
+      class: 'badge',
+      href: global.MAG.join('category.html?c=' + encodeURIComponent(a.category)),
+      text: name
+    });
+  }
+
+  /** Who wrote it, when, and how long it will take — one line, in that order,
+   *  because that is the order a reader decides in. */
+  function byline(a) {
+    var strip = el('div', { class: 'byline' });
+    if (a.authors && a.authors[0]) {
+      strip.appendChild(el('span', { class: 'byline__by', text: a.authors[0].name }));
+    }
+    if (a.published_at) strip.appendChild(el('span', { text: fmtDate(a.published_at) }));
+    if (a.reading_minutes) strip.appendChild(el('span', { text: a.reading_minutes + ' min' }));
+    if (a.sponsored) strip.appendChild(el('span', { class: 'byline__flag', text: 'Sponsored' }));
+    return strip;
+  }
+
+  /**
+   * One article, in one of three shapes:
+   *   default  — headline, summary, byline. Lists and section blocks.
+   *   grid     — the same without the summary, for a row of modules.
+   *   compact  — headline and date only, for a column beside a lead story.
+   */
   function card(a, opts) {
     opts = opts || {};
     var href = global.MAG.join('article.html?a=' + encodeURIComponent(a.slug));
     var kids = [];
-    if (a.category_name || a.category) {
-      kids.push(el('span', { class: 'kicker', text: a.category_name || a.category.replace(/-/g, ' ') }));
-    }
+
+    if (opts.badge !== false) kids.push(badge(a));
     kids.push(el('h3', {}, [el('a', { href: href, text: a.title })]));
     if (opts.summary !== false && a.summary) kids.push(el('p', { text: a.summary }));
-    var meta = el('div', { class: 'meta' });
-    if (a.authors && a.authors[0]) meta.appendChild(el('span', { class: 'by', text: a.authors[0].name }));
-    meta.appendChild(el('span', { text: fmtDate(a.published_at) }));
-    if (a.reading_minutes) meta.appendChild(el('span', { text: a.reading_minutes + ' min read' }));
-    if (a.sponsored) meta.appendChild(el('span', { text: 'Sponsored' }));
-    kids.push(meta);
-    return el('article', { class: 'card' }, kids);
+    kids.push(byline(a));
+
+    return el('article', {
+      class: 'card' + (opts.compact ? ' card--compact' : '') + (opts.grid ? ' card--grid' : '')
+    }, kids);
   }
 
   /* ---- advertising ----
@@ -256,7 +287,11 @@
     var c = choice.creative;
     var img = el('img', { src: MAG.join(c.image), alt: c.alt || '', loading: 'lazy', decoding: 'async' });
     var link = el('a', { href: c.url, rel: 'nofollow sponsored noopener', target: '_blank' }, [img]);
-    link.addEventListener('click', function () { if (counter) { counter.bump(c.id, 'click'); counter.flush(); } });
+    link.addEventListener('click', function () {
+      // A click means the reader is leaving now, so this one does not wait for
+      // the page to close.
+      if (counter) { counter.bump(c.id, 'click'); counter.flush(); }
+    });
     node.appendChild(link);
     node.classList.add('is-filled');
 
@@ -345,7 +380,10 @@
   }
 
   global.Site = {
-    el: el, card: card, fmtDate: fmtDate, prefs: Prefs,
-    mountAds: mountAds, fail: fail, ready: boot()
+    el: el, card: card, badge: badge, byline: byline, fmtDate: fmtDate, prefs: Prefs,
+    mountAds: mountAds, fail: fail, ready: boot(),
+    // vitals.js collects from here on the way out, so the page sends one
+    // beacon rather than one per kind of measurement.
+    adCounter: function () { return counter; }
   };
 })(window);

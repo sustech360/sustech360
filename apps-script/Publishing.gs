@@ -226,6 +226,110 @@ const Publish = {
     return { ok: true, files: listings };
   },
 
+  /** What is on the site right now, with everything that can be corrected
+   *  without going back through review. Reading it needs editorial access;
+   *  changing it does not, which is the next function. */
+  liveIndex: function (session, p) {
+    Perms.require(session, 'VIEW');
+    return Db.all('Articles')
+      .filter(a => ['PUBLISHED', 'ARCHIVED'].indexOf(a.status) !== -1 && Number(a.public_version || 0) > 0)
+      .sort((a, b) => String(b.published_at).localeCompare(String(a.published_at)))
+      .slice(0, Math.min(Number((p && p.limit) || 100), 300))
+      .map(a => {
+        const author = Db.findOne('Users', { id: a.primary_author });
+        const doc = (function () {
+          const raw = Db.findOne('Settings', { key: 'public.' + a.id });
+          if (!raw) return {};
+          try { return JSON.parse(raw.value); } catch (e) { return {}; }
+        })();
+        return {
+          id: a.id, slug: a.slug, title: a.title, status: a.status,
+          category: a.category, level: a.level, format: a.format,
+          topics: asList(a.topics), tags: asList(a.tags),
+          sponsored: a.sponsored === true || a.sponsored === 'TRUE',
+          public_version: Number(a.public_version), working_version: Number(a.working_version),
+          published_at: a.published_at || '', updated_at: a.updated_at || '',
+          author: author ? author.name : '',
+          seo_title: (doc.seo && doc.seo.title) || '', seo_description: (doc.seo && doc.seo.description) || '',
+          url: CFG.get('SITE_URL', '') + 'article.html?a=' + a.slug
+        };
+      });
+  },
+
+  /** Corrects the details of something already public — the category it sits
+   *  in, how it describes itself to a search engine, whether it is labelled
+   *  sponsored.
+   *
+   *  Supervisor admin only, and deliberately so: this is the one path that
+   *  changes a live page without passing through review, and it republishes
+   *  immediately. The body is not editable here. Changing what an article SAYS
+   *  is a revision, which goes back through an editor; changing how it is
+   *  FILED is a correction, which does not.
+   */
+  updateLive: function (session, p) {
+    Perms.requireSupervisor(session);
+    const a = Db.findOne('Articles', { id: String(p.article_id || '') });
+    if (!a) throw new ApiFail('not_found');
+    if (Number(a.public_version || 0) < 1) throw new ApiFail('not_published');
+    const reason = String(p.reason || '').trim();
+    if (reason.length < 10) throw new ApiFail('reason_required', 'say what is being corrected');
+
+    const before = {
+      title: a.title, category: a.category, level: a.level,
+      topics: asList(a.topics).join(','), tags: asList(a.tags).join(','),
+      sponsored: String(a.sponsored)
+    };
+    const patch = {};
+
+    if (p.title !== undefined) {
+      const title = String(p.title).trim();
+      if (title.length < 8) throw new ApiFail('title_too_short');
+      patch.title = title;
+    }
+    if (p.category !== undefined) {
+      const category = String(p.category);
+      if (!Db.findOne('Categories', { slug: category })) throw new ApiFail('unknown_category', category);
+      patch.category = category;
+    }
+    if (p.level !== undefined) {
+      if (['discover', 'understand', 'research'].indexOf(String(p.level)) === -1) throw new ApiFail('bad_level');
+      patch.level = String(p.level);
+    }
+    if (p.topics !== undefined) patch.topics = JSON.stringify((p.topics || []).map(String));
+    if (p.tags !== undefined) patch.tags = JSON.stringify((p.tags || []).map(String));
+    if (p.sponsored !== undefined) patch.sponsored = p.sponsored === true;
+
+    // The slug is the address readers and search engines already have. It is
+    // not editable here for the same reason a published article is not: someone
+    // else is holding a link to it.
+    if (p.slug !== undefined && String(p.slug) !== a.slug) {
+      throw new ApiFail('slug_fixed', 'the address of a published article cannot change — links already point at it');
+    }
+
+    Db.update('Articles', { id: a.id }, patch);
+
+    const fresh = Db.findOne('Articles', { id: a.id });
+    const version = Db.findOne('Versions', { article_id: a.id, version: fresh.public_version });
+    const content = version && version.payload_ref ? Articles.readPayload_(version.payload_ref) : { fields: {} };
+    const media = Db.find('Media', { article_id: a.id });
+    const doc = Render.article(fresh, fresh.public_version, content, media);
+
+    if (p.seo_title !== undefined) doc.seo.title = String(p.seo_title).slice(0, 70);
+    if (p.seo_description !== undefined) doc.seo.description = String(p.seo_description).slice(0, 200);
+    doc.updated_at = new Date().toISOString();
+
+    const files = [this.commit_('data/articles/' + fresh.slug + '.json',
+      JSON.stringify(doc, null, 2), 'Correct ' + fresh.id + ': ' + reason)];
+    this.upsertSearchDoc_(doc);
+    files.push.apply(files, this.listings_());
+
+    Audit.log(session, 'LIVE_ARTICLE_CORRECTED', 'article', fresh.id, {
+      prev: JSON.stringify(before), next: JSON.stringify(patch),
+      reason: reason, scope: fresh.category, meta: { files: files.length }
+    });
+    return { ok: true, files: files.length, slug: fresh.slug };
+  },
+
   /* ---------------- the commit itself ---------------- */
 
   commitVersion_: function (session, a, v, kind, reason) {

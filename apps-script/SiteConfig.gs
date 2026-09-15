@@ -111,6 +111,7 @@ const SiteConfig = {
       starts: p.starts || '', ends: p.ends || '',
       items: JSON.stringify(p.items || []),
       placement: placement,
+      blurb: String(p.blurb === undefined ? (existing ? existing.blurb : '') : p.blurb).slice(0, 240),
       updated_at: new Date().toISOString()
     };
     if (patch.starts && patch.ends && new Date(patch.starts) > new Date(patch.ends)) {
@@ -254,6 +255,52 @@ const SiteConfig = {
         put('ads.slots', JSON.stringify(clean));
       }
     }
+    // Which social accounts appear in the footer, and where they point. A blank
+    // value removes the link — that is the "off" switch, so there is nothing
+    // else to remember.
+    if (p.social) {
+      // More than one host is legitimate for several of these, and rejecting a
+      // link someone pasted correctly is worse than accepting a wrong one.
+      const allowed = {
+        linkedin: ['linkedin.com'],
+        x: ['x.com', 'twitter.com'],
+        facebook: ['facebook.com', 'fb.com'],
+        instagram: ['instagram.com'],
+        youtube: ['youtube.com', 'youtu.be'],
+        telegram: ['t.me', 'telegram.me'],
+        whatsapp: ['whatsapp.com', 'wa.me', 'chat.whatsapp.com'],
+        researchgate: ['researchgate.net'],
+        email: null, rss: null
+      };
+      const social = {};
+      Object.keys(p.social).forEach(key => {
+        if (!(key in allowed)) throw new ApiFail('unknown_platform', key);
+        const value = String(p.social[key] || '').trim();
+        if (!value) { social[key] = ''; return; }          // blank means hide it
+
+        if (key === 'email') {
+          const address = value.replace(/^mailto:/, '');
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)) throw new ApiFail('bad_email', value);
+          social[key] = address;
+          return;
+        }
+        if (key === 'rss') { social[key] = value; return; }
+
+        // Anything that becomes a link on every page is checked before it can.
+        if (!/^https:\/\//.test(value)) throw new ApiFail('bad_social_url', key + ': must start with https://');
+        if (/[<>"']/.test(value)) throw new ApiFail('bad_social_url', key + ': stray characters');
+        const host = value.replace(/^https:\/\//, '').split('/')[0].toLowerCase();
+        const hosts = allowed[key];
+        if (hosts && !hosts.some(h => host === h || host.endsWith('.' + h))) {
+          throw new ApiFail('wrong_platform', key + ': that is a link to ' + host);
+        }
+        social[key] = value;
+      });
+      // One key per platform. Content.settings turns dotted keys into nested
+      // objects, so these arrive at the site as settings.social.linkedin.
+      Object.keys(social).forEach(k => put('social.' + k, social[k]));
+    }
+
     if (p.seo) {
       ['site_url', 'publisher', 'twitter'].forEach(k => {
         if (p.seo[k] !== undefined) put('seo.' + k, String(p.seo[k]).slice(0, 200));
@@ -392,6 +439,19 @@ const SiteConfig = {
         else Db.insert(table, patch);
         restored++;
       });
+      if (table === 'Settings') {
+        // A setting added after this version did not exist in it. Adopting means
+        // going back to that version, so those are blanked — but only the ones
+        // that describe the public site. Editorial, billing and system rows are
+        // not part of a configuration version and must survive untouched.
+        Db.all('Settings').forEach(existing => {
+          if (seen[String(existing.key)]) return;
+          if ((existing.scope || 'site') !== 'site') return;
+          if (!String(existing.value || '').trim()) return;
+          Db.update('Settings', { key: existing.key }, { value: '' });
+        });
+        return;
+      }
       if (!retire[table]) return;
       Db.all(table).forEach(existing => {
         if (seen[String(existing[key])]) return;

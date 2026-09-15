@@ -110,12 +110,19 @@
     if (kind === 'click') e.c += 1; else e.i += 1;
   };
 
-  Counter.prototype.flush = function () {
+  /** Hands what has been counted to the page's single beacon rather than
+   *  sending its own. One visit, one request, one Apps Script execution. */
+  Counter.prototype.drain = function () {
     var events = [];
     for (var k in this.pending) if (this.pending.hasOwnProperty(k)) events.push(this.pending[k]);
-    if (!events.length || !this.endpoint) return false;
     this.pending = {};
-    var body = JSON.stringify({ action: 'recordAdEvents', payload: { events: events.slice(0, 40) } });
+    return events.slice(0, 40);
+  };
+
+  Counter.prototype.flush = function () {
+    var events = this.drain();
+    if (!events.length || !this.endpoint) return false;
+    var body = JSON.stringify({ action: 'recordTelemetry', payload: { ads: events } });
     try {
       if (global.navigator && navigator.sendBeacon) {
         navigator.sendBeacon(this.endpoint, new Blob([body], { type: 'text/plain;charset=utf-8' }));

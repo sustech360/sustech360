@@ -342,3 +342,20 @@ td button { padding: .35rem .6rem; font-size: .75rem; }
   .app { display: block; }
   .card { break-inside: avoid; border-color: #999; }
 }
+
+/* A screen being checked behind your back says so quietly, in the heading,
+   rather than throwing a spinner over something you are already reading. */
+.topbar h1.is-checking::after {
+  content: "";
+  display: inline-block;
+  width: 6px; height: 6px;
+  margin-left: .55rem;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: middle;
+  animation: s360-pulse 1s ease-in-out infinite;
+}
+@keyframes s360-pulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .topbar h1.is-checking::after { animation: none; opacity: .6; }
+}

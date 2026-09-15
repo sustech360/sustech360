@@ -10,7 +10,13 @@ const Content = {
    *  the homepage. Scope is the filter, not a prefix guess. */
   settings: function () {
     const out = {};
-    Db.all('Settings').filter(s => (s.scope || 'site') === 'site')
+    Db.all('Settings')
+      .filter(s => (s.scope || 'site') === 'site')
+      // A blank value is how the control centre removes something — a social
+      // link, an analytics id. Publishing the empty key would leave the setting
+      // present but meaningless, and would make an adopted older version
+      // impossible to match exactly.
+      .filter(s => String(s.value === undefined || s.value === null ? '' : s.value).trim() !== '')
       .forEach(s => { set_(out, s.key, parseMaybe_(s.value)); });
     return out;
   },
@@ -44,7 +50,8 @@ const Content = {
         // the homepage loses its advertising the first time configuration is
         // published. The fallback to `source` covers rows seeded before the
         // placement column existed.
-        placement: s.type === 'ad' ? (s.placement || s.source || '') : undefined
+        placement: s.type === 'ad' ? (s.placement || s.source || '') : undefined,
+        blurb: s.blurb || ''
       }))
     };
   },

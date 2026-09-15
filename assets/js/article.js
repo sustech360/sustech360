@@ -30,13 +30,17 @@
     structuredData(a);
 
     head.innerHTML = '';
-    head.appendChild(el('a', { class: 'kicker', href: MAG.join('category.html?c=' + encodeURIComponent(a.category)), text: a.category_name || a.category }));
+    head.appendChild(el('a', {
+      class: 'kicker badge',
+      href: MAG.join('category.html?c=' + encodeURIComponent(a.category)),
+      text: a.category_name || a.category
+    }));
     head.appendChild(el('h1', { text: a.title }));
     if (a.subtitle) head.appendChild(el('p', { class: 'standfirst', text: a.subtitle }));
 
-    var meta = el('div', { class: 'meta' });
+    var meta = el('div', { class: 'meta byline' });
     (a.authors || []).forEach(function (au) {
-      meta.appendChild(el('span', { class: 'by', text: au.name + (au.institution ? ', ' + au.institution : '') }));
+      meta.appendChild(el('span', { class: 'byline__by', text: au.name + (au.institution ? ', ' + au.institution : '') }));
     });
     meta.appendChild(el('span', { text: Site.fmtDate(a.published_at) }));
     if (a.updated_at) meta.appendChild(el('span', { text: 'Updated ' + Site.fmtDate(a.updated_at) }));

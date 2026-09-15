@@ -50,9 +50,18 @@ const CFG = {
     });
     // A name typed in the wrong case is invisible otherwise: the property is
     // there, the engine cannot see it, and nothing explains why.
-    const wrongCase = Object.keys(props).filter(k =>
-      CFG.REQUIRED.concat(CFG.OPTIONAL).some(pair => pair[0] !== k && pair[0].toLowerCase() === k.toLowerCase()));
-    return { missing: missing, blank: blank, present: present, wrongCase: wrongCase };
+    // A name that is nearly right is worse than one that is absent: the row is
+    // on the screen, it looks correct, and the engine cannot see it. Spaces
+    // pasted from a document are the usual culprit, wrong case the next.
+    const nearly = [];
+    Object.keys(props).forEach(k => {
+      const normalised = k.trim().toUpperCase();
+      if (k === normalised) return;
+      if (CFG.REQUIRED.concat(CFG.OPTIONAL).some(pair => pair[0] === normalised)) {
+        nearly.push({ typed: k, meant: normalised });
+      }
+    });
+    return { missing: missing, blank: blank, present: present, wrongCase: nearly };
   },
 
   /** Throws one message that says everything that is wrong and where to fix it. */
@@ -71,8 +80,9 @@ const CFG = {
       lines.push('');
     }
     if (state.wrongCase.length) {
-      lines.push('WRONG CASE — property names are case-sensitive:');
-      state.wrongCase.forEach(k => lines.push('  ' + k + '  should be  ' + k.toUpperCase()));
+      lines.push('NEARLY RIGHT — these exist but are not what the engine looks for:');
+      state.wrongCase.forEach(n => lines.push('  [' + n.typed + ']  should be  [' + n.meant + ']'));
+      lines.push('  (the brackets show stray spaces; names are case-sensitive)');
       lines.push('');
     }
     lines.push('Where: ⚙ Project Settings (left sidebar) → scroll to Script Properties');

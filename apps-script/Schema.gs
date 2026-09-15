@@ -16,7 +16,7 @@ const SCHEMA = {
   Versions: ['id','article_id','version','payload_ref','status','created_by','created_at','approved_by','approved_at','notes'],
   Reviews: ['id','article_id','version','reviewer_id','decision','comments','created_at','completed_at','assigned_by','due_at','status'],
   Menus: ['id','menu','name','url','parent','order','icon','status','scope','assigned_editor','updated_at'],
-  Homepage: ['id','section_id','type','title','source','count','layout','order','active','starts','ends','items','placement','updated_at'],
+  Homepage: ['id','section_id','type','title','source','count','layout','order','active','starts','ends','items','placement','blurb','updated_at'],
   Categories: ['slug','name','parent','description','order','status'],
   Features: ['flag','state','starts','ends','locked','note','updated_at'],
   Settings: ['key','value','scope','updated_by','updated_at'],
@@ -29,7 +29,7 @@ const SCHEMA = {
   Advertisers: ['id','company','contact','email','website','country','status','notes','created_at','created_by'],
   Campaigns: ['id','advertiser_id','name','package','tier','starts','ends','status','created_at','created_by','approved_by','approved_at','notes'],
   Subscribers: ['id','email','name','token_hash','status','source','topics','created_at','confirmed_at','unsubscribed_at','last_sent_at','failures'],
-  EmailTemplates: ['id','key','subject','body_ref','version','status','updated_at'],
+  EmailTemplates: ['id','key','subject','body_ref','identity','version','status','updated_at','updated_by','notes'],
   EmailLogs: ['id','to','template','subject','status','error','sent_at','sent_by'],
   EmailCampaigns: ['id','subject','preheader','body_ref','status','audience','created_by','created_at','approved_by','approved_at','tested_at','tested_by','started_at','sent_at','cursor','sent_count','failed_count','note'],
   SocialPosts: ['id','article_id','platform','text','link','status','created_at','posted_at','posted_by','error','note'],
@@ -91,8 +91,22 @@ function checkSetup() {
   });
 
   if (state.wrongCase.length) {
-    out.push('', 'Typed in the wrong case — the engine cannot see these:');
-    state.wrongCase.forEach(k => out.push('  ' + k + '  should be  ' + k.toUpperCase()));
+    out.push('', 'Nearly right — on the screen, invisible to the engine:');
+    state.wrongCase.forEach(n => out.push('  [' + n.typed + ']  should be  [' + n.meant + ']'));
+    out.push('  The brackets show stray spaces. Retype these two names by hand.');
+  }
+
+  // Knowing a save worked once is the most useful clue there is: it means the
+  // screen and the account are fine, and the remaining rows simply never saved.
+  // Count everything the store holds, not just the required ones: ENV alone
+  // saving is exactly the case that proves the screen works.
+  const savedCount = Object.keys(PropertiesService.getScriptProperties().getProperties()).length;
+  if (savedCount && state.missing.length) {
+    out.push('', 'Note: ' + savedCount + ' propert' + (savedCount === 1 ? 'y is' : 'ies are') +
+      ' saved and ' + state.missing.length + ' missing. Saving does work in this project — the');
+    out.push('missing rows were typed but never saved. Add them again and press');
+    out.push('"Save script properties" before leaving the screen, or use');
+    out.push('setPropertiesOnce() in Bootstrap.gs to write them from code.');
   }
 
   const ready = !state.missing.length && !state.blank.length && !state.wrongCase.length;
