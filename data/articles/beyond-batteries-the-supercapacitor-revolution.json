@@ -81,6 +81,13 @@
       "type": "h2",
       "text": "The Electrode Is Changing"
     },
+{
+      "type": "figure",
+      "src": "assets/media/MAG-2026-000001/Supercaps.png",
+      "alt": "Representation of charged species be stored electrostaticly by the EDLC supercapacitor",
+      "caption": "Representation of charged species be stored electrostaticly by the EDLC supercapacitor (Krishna Kumar M)"
+    }
+    
       {
       "type": "p",
       "text": "One of the most important developments is happening inside the electrode."
@@ -369,12 +376,6 @@
       "type": "p",
       "text": "That makes them valuable partners in an increasingly electrified world."
     },
-    {
-      "type": "figure",
-      "src": "assets/media/MAG-2026-000001/Supercaps.png",
-      "alt": "Representation of charged species be stored electrostaticly by the EDLC supercapacitor",
-      "caption": "Representation of charged species be stored electrostaticly by the EDLC supercapacitor (Krishna Kumar M)"
-    }
-  ],
+    ],
   "related": []
 }
