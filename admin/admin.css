@@ -68,30 +68,71 @@ a { color: var(--accent); }
 /* ============================ sign in ============================ */
 
 .signin {
-  min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem;
+  min-height: 100vh; min-height: 100dvh;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  background: var(--paper);
+}
+
+/* The left half: whose studio this is. A quiet orbit pattern behind the mark,
+   drawn in CSS so the sign-in screen needs nothing from the network. */
+.signin__stage {
+  display: none;
+  position: relative;
+  color: #EAF3F0;
   background:
-    radial-gradient(1100px 520px at 12% -8%, #E8F1ED 0%, rgba(232, 241, 237, 0) 62%),
-    radial-gradient(900px 460px at 100% 108%, #EDF0EC 0%, rgba(237, 240, 236, 0) 60%),
+    radial-gradient(900px 480px at 20% 10%, rgba(95, 192, 166, .22) 0%, rgba(95, 192, 166, 0) 60%),
+    radial-gradient(700px 520px at 85% 90%, rgba(31, 111, 92, .35) 0%, rgba(31, 111, 92, 0) 62%),
+    linear-gradient(160deg, #163027 0%, #13212E 58%, #101A22 100%);
+  overflow: hidden;
+}
+.signin__stage::before,
+.signin__stage::after {
+  content: ""; position: absolute; border-radius: 50%;
+  border: 1px solid rgba(234, 243, 240, .09);
+}
+.signin__stage::before { width: 620px; height: 620px; right: -190px; top: -140px; }
+.signin__stage::after {
+  width: 420px; height: 420px; left: -130px; bottom: -120px;
+  border-color: rgba(127, 191, 172, .16);
+}
+.signin__stageinner { position: relative; z-index: 1; padding: clamp(2.5rem, 6vw, 4.5rem); max-width: 30rem; }
+.signin__mark { display: block; margin-bottom: 1.75rem; }
+.signin__lede {
+  font-family: var(--serif); font-size: clamp(1.7rem, 2.4vw, 2.3rem);
+  line-height: 1.18; letter-spacing: -.02em; margin: 0; color: #FFFFFF;
+}
+.signin__rule { width: 56px; height: 2px; background: var(--accent); margin: 1.5rem 0; border: 0; }
+.signin__motto {
+  font-size: .8125rem; letter-spacing: .12em; text-transform: uppercase;
+  color: #7FBFAC; margin: 0;
+}
+
+/* The right half: the form, and nothing else. */
+.signin__panel {
+  display: grid; place-items: center; padding: 1.5rem;
+  background:
+    radial-gradient(760px 420px at 50% -10%, #EAF1EE 0%, rgba(234, 241, 238, 0) 65%),
     var(--paper);
 }
 .signin__card {
-  width: 100%; max-width: 400px; background: var(--surface);
-  border: 1px solid var(--rule); border-radius: 12px; padding: 2rem 1.9rem 1.9rem;
+  width: 100%; max-width: 384px; background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 12px; padding: 2rem 1.9rem 1.75rem;
   box-shadow: 0 1px 2px rgba(22, 33, 43, .04), 0 18px 46px rgba(22, 33, 43, .09);
 }
-.signin__brand { display: flex; gap: .85rem; align-items: center; }
-.signin__brand strong { display: block; font-size: 1.25rem; line-height: 1.15; }
-.signin__brand span {
-  display: block; font-family: var(--sans); font-size: .6875rem; color: var(--accent);
-  letter-spacing: .09em; text-transform: uppercase; margin-top: .2rem;
+.signin__brand { display: flex; gap: .8rem; align-items: center; margin-bottom: 1.5rem; }
+.signin__brand strong { display: block; font-size: 1.125rem; line-height: 1.15; }
+.signin__brand span { display: block; font-size: .8125rem; color: var(--muted); margin-top: .1rem; }
+.signin__card .act { width: 100%; justify-content: center; padding: .68rem 1rem; font-size: .875rem; }
+.signin__foot {
+  margin: 1.25rem 0 0; padding-top: 1rem; border-top: 1px solid var(--rule);
+  font-size: .75rem; color: var(--faint);
 }
-.signin__who {
-  margin: 1.1rem 0 1.4rem; padding-top: 1.1rem; border-top: 1px solid var(--rule);
-  font-size: .8125rem; color: var(--muted);
+
+/* Room for the stage once there is room for it. */
+@media (min-width: 920px) {
+  .signin { grid-template-columns: 1.05fr .95fr; }
+  .signin__stage { display: grid; align-items: center; }
 }
-.signin__card .act { width: 100%; justify-content: center; padding: .65rem 1rem; font-size: .875rem; }
-.signin__card .rowbtns { margin-top: 1.25rem; }
-.signin__card .act { width: 100%; justify-content: center; }
 
 /* ============================ layout ============================ */
 

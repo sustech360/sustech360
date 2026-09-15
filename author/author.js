@@ -48,12 +48,63 @@
 
   /* ---------------- session ---------------- */
 
+  /* ---- session ----
+     The same three-hour idle window the studio uses. An author writing a
+     paragraph, going to find a reference and coming back should not lose the
+     draft to a sign-in screen. */
+
+  var SESSION_KEY = 's360.author';
+  var IDLE_LIMIT = 3 * 60 * 60 * 1000;
+
+  function keepToken(t) {
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify({ token: t, until: Date.now() + IDLE_LIMIT })); }
+    catch (e) {}
+  }
+  function heldToken() {
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) {
+        var legacy = sessionStorage.getItem('mag.author.token');
+        if (legacy) { keepToken(legacy); sessionStorage.removeItem('mag.author.token'); return legacy; }
+        return null;
+      }
+      var rec = JSON.parse(raw);
+      if (!rec || !rec.token || Date.now() > rec.until) { dropToken(); return null; }
+      return rec.token;
+    } catch (e) { return null; }
+  }
+  function touchToken() {
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      var rec = JSON.parse(raw);
+      rec.until = Date.now() + IDLE_LIMIT;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(rec));
+    } catch (e) {}
+  }
+  function dropToken() {
+    try { localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem('mag.author.token'); } catch (e) {}
+  }
+
+  /* A failed request is not a sign-out — least of all here, where the thing
+     being lost is somebody's unsaved writing. */
+  var callThrough = api.call.bind(api);
+  api.call = function (action, payload) {
+    return callThrough(action, payload).then(function (data) {
+      touchToken();
+      return data;
+    }, function (e) {
+      if (e && e.code === 'unauthenticated') dropToken();
+      throw e;
+    });
+  };
+
   $('signin').addEventListener('click', function () {
     var btn = this; btn.disabled = true;
     api.call('login', { email: $('email').value.trim(), password: $('password').value, mfa_code: $('mfa').value.trim() })
       .then(function (res) {
         api.setToken(res.token);
-        try { sessionStorage.setItem('mag.author.token', res.token); } catch (e) {}
+        keepToken(res.token);
         $('password').value = '';
         me = res;
         start();
@@ -64,7 +115,7 @@
 
   $('signout').addEventListener('click', function () {
     api.call('logout').catch(function () {}).then(function () {
-      try { sessionStorage.removeItem('mag.author.token'); } catch (e) {}
+      dropToken();
       location.reload();
     });
   });
@@ -464,11 +515,14 @@
 
   /* ---------------- resume ---------------- */
 
-  var token = null;
-  try { token = sessionStorage.getItem('mag.author.token'); } catch (e) {}
+  var token = heldToken();
   if (token) {
     api.setToken(token);
     api.call('me').then(function (res) { me = res; start(); })
-      .catch(function () { try { sessionStorage.removeItem('mag.author.token'); } catch (e) {} });
+      .catch(function (e) {
+        if (e && e.code === 'unauthenticated') return;   // already dropped
+        $('loginmsg').innerHTML =
+          '<div class="msg err">Could not reach the engine just now. Your session is still valid — reload in a moment.</div>';
+      });
   }
 })();

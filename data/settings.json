@@ -1,9 +1,13 @@
 {
+  "version": 1,
+  "generated_at": "2026-09-10T00:00:00Z",
   "brand": {
     "name": "Sustainable Science, Technology and Solutions 360",
+    "short_name": "SusTech360",
+    "tagline": "Research, technology and policy for the energy transition",
     "logo": "assets/icons/logo.svg",
     "logo_dark": "assets/icons/logo-dark.svg",
-    "short_name": "SusTech360"
+    "favicon": "assets/icons/logo-mark.svg"
   },
   "appearance": {
     "tokens": {
@@ -18,13 +22,18 @@
   },
   "seo": {
     "site_url": "https://sustech360.com/",
+    "twitter": "",
     "publisher": "Sustainable Science, Technology and Solutions 360"
   },
+  "analytics": {
+    "ga4_id": ""
+  },
   "ads": {
+    "adsense_client": "",
     "enabled": false
   },
   "contact": {
-    "editorial": "authors@sustech360.com"
+    "editorial": "editor@example.com"
   },
   "reading": {
     "allow_pdf_download": true,

@@ -13,23 +13,45 @@
 
 <!-- Sign in -->
 <div id="login" class="signin">
-  <div class="signin__card">
-    <div class="signin__brand">
-      <img src="../assets/icons/logo-mark.svg" alt="" width="52" height="52">
-      <div>
-        <strong>S360 Editorial Studio</strong>
-        <span>Create &middot; Curate &middot; Publish &middot; Connect</span>
-      </div>
+
+  <!-- The half of the screen that says whose studio this is. -->
+  <div class="signin__stage" aria-hidden="true">
+    <div class="signin__stageinner">
+      <img class="signin__mark" src="../assets/icons/logo-mark.svg" alt="" width="84" height="84">
+      <p class="signin__lede">Sustainable Science,<br>Technology &amp; Solutions&nbsp;360</p>
+      <p class="signin__rule"></p>
+      <p class="signin__motto">Create &middot; Curate &middot; Publish &middot; Connect</p>
     </div>
-    <p class="signin__who">Sustainable Science, Technology &amp; Solutions 360</p>
-    <label for="email">Email</label>
-    <input id="email" type="email" autocomplete="username" autofocus>
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password">
-    <label for="mfa">Authentication code <span class="hint">if enabled</span></label>
-    <input id="mfa" inputmode="numeric" autocomplete="one-time-code">
-    <div class="rowbtns"><button class="act" id="signin" type="button">Sign in</button></div>
-    <div id="loginmsg"></div>
+  </div>
+
+  <div class="signin__panel">
+    <div class="signin__card">
+      <div class="signin__brand">
+        <img src="../assets/icons/logo-mark.svg" alt="" width="44" height="44">
+        <div>
+          <strong>S360 Editorial Studio</strong>
+          <span>Sign in to continue</span>
+        </div>
+      </div>
+
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" autofocus>
+
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password">
+
+      <!-- Shown only when the engine asks for it: most people have no code to
+           type, and a box they must ignore is a box that makes them hesitate. -->
+      <div id="mfarow" class="hidden">
+        <label for="mfa">Authentication code</label>
+        <input id="mfa" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+               placeholder="6 digits from your app">
+      </div>
+
+      <div class="rowbtns"><button class="act" id="signin" type="button">Sign in</button></div>
+      <div id="loginmsg"></div>
+      <p class="signin__foot">Trouble signing in? Ask your supervisor admin to reset it.</p>
+    </div>
   </div>
 </div>
 

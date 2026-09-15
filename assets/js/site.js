@@ -109,6 +109,66 @@
 
   function byOrder(a, b) { return (a.order || 0) - (b.order || 0); }
 
+  /* ---- social links ----
+     Which of these appear, and where they point, is set in the control centre.
+     They are written into the footer of every page from here, so no page has to
+     carry markup for a link that may not exist.
+
+     Text rather than logos: a publication's footer reads better as words, and a
+     brand mark drawn from memory is worse than no mark at all. */
+
+  var SOCIAL = [
+    ['linkedin',    'LinkedIn'],
+    ['x',           'X'],
+    ['facebook',    'Facebook'],
+    ['instagram',   'Instagram'],
+    ['youtube',     'YouTube'],
+    ['telegram',    'Telegram'],
+    ['whatsapp',    'WhatsApp'],
+    ['researchgate','ResearchGate'],
+    ['email',       'Email'],
+    ['rss',         'RSS']
+  ];
+
+  function renderSocial(settings) {
+    var config = (settings && settings.social) || {};
+    var host = document.querySelector('[data-social]') ||
+               (function () {
+                 var footer = document.querySelector('.footer .shell');
+                 if (!footer) return null;
+                 var box = el('div', { 'data-social': '' });
+                 footer.insertBefore(box, footer.firstChild);
+                 return box;
+               })();
+    if (!host) return;
+
+    var links = SOCIAL.filter(function (pair) {
+      var value = config[pair[0]];
+      return value && String(value).trim();
+    });
+    if (!links.length) { host.remove(); return; }
+
+    var list = el('ul', { class: 'social' });
+    links.forEach(function (pair) {
+      var value = String(config[pair[0]]).trim();
+      var href = pair[0] === 'email'
+        ? (value.indexOf('mailto:') === 0 ? value : 'mailto:' + value)
+        : (pair[0] === 'rss' && value.indexOf('http') !== 0 ? MAG.join(value) : value);
+      list.appendChild(el('li', {}, [
+        el('a', {
+          href: href,
+          text: pair[1],
+          rel: pair[0] === 'email' || pair[0] === 'rss' ? null : 'me noopener',
+          target: pair[0] === 'email' ? null : '_blank',
+          'aria-label': pair[1] === 'RSS' ? 'RSS feed' : pair[1] + ', opens in a new tab'
+        })
+      ]));
+    });
+    host.innerHTML = '';
+    host.appendChild(el('h2', { class: 'social__title', text: 'Follow' }));
+    host.appendChild(list);
+  }
+
   /* ---- article cards ---- */
 
   function card(a, opts) {
@@ -259,6 +319,7 @@
     var shell = Promise.all([API.getSettings(), API.getMenus()]).then(function (r) {
       applySettings(r[0]);
       renderNav(r[1]);
+      renderSocial(r[0]);
       if (r[0].analytics && r[0].analytics.ga4_id) analytics(r[0].analytics.ga4_id);
       return r[0];
     });

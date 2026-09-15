@@ -1,5 +1,5 @@
 # Every file in this project
-132 files. The **Phase** column says which build phase created it; "—" means it came later, with branding, the contract tests or version control.
+134 files. The **Phase** column says which build phase created it; "—" means it came later, with branding, the contract tests or version control.
 
 You do not need to understand any of these to run the site. The two that matter when installing are `admin/config.js` (where your engine address goes) and everything in `apps-script/` (which you paste into Google).
 
@@ -8,7 +8,6 @@ You do not need to understand any of these to run the site. The two that matter 
 | File | Phase | What it is |
 |---|---|---|
 | `404.html` | 1 | Page not found. |
-| `CNAME` | — | Tells GitHub Pages the site is sustech360.com. |
 | `about.html` | 1 | About the publication. |
 | `accept.html` | 2 | Where an author invitation link lands. |
 | `article.html` | 1 | One article. Structure only — the text arrives as JSON. |
@@ -64,9 +63,11 @@ You do not need to understand any of these to run the site. The two that matter 
 | `admin/comms.js` | 7 | Newsletter, campaign composer, social queue. |
 | `admin/config.js` | 1 | Where you paste your Apps Script address. Not a secret. |
 | `admin/editorial.js` | 3 | The queue, the article desk, the reviewer desk. |
+| `admin/email.js` | — | Email centre: every message, who sends it, where replies go. |
 | `admin/index.html` | 1 | The control centre shell and its navigation. |
 | `admin/issues-admin.js` | 8 | The issue composer. |
 | `admin/performance.js` | 9 | Performance centre and payload budget. |
+| `admin/published.js` | — | What is live, and the supervisor-only corrections to it. |
 | `admin/rulebook.js` | 4 | Guidelines centre, formats, checklist, writing and image rules. |
 | `admin/siteadmin.js` | 5 | Navigation, homepage, categories, flags, brand, publishing. |
 
@@ -89,6 +90,7 @@ You do not need to understand any of these to run the site. The two that matter 
 | `apps-script/Authors.gs` | 2 | Author profiles. |
 | `apps-script/Backup.gs` | 10 | Snapshots, verification and a guarded restore. |
 | `apps-script/Billing.gs` | 10 | Orders, invoices, payments, credit notes. |
+| `apps-script/Bootstrap.gs` | — | Two one-off helpers: see what the script can read, and set the settings from code. |
 | `apps-script/Code.gs` | 1 | The single entry point and the action router. |
 | `apps-script/Config.gs` | 1 | Reads secrets from Script Properties. None are in the code. |
 | `apps-script/Content.gs` | 1 | Turns tables into the JSON the public site reads. |
@@ -187,8 +189,8 @@ You do not need to understand any of these to run the site. The two that matter 
 
 ## Counts
 
-- Engine files to paste into Apps Script: **30 `.gs` files + `appsscript.json`**
+- Engine files to paste into Apps Script: **31 `.gs` files + `appsscript.json`**
 - Pages readers can visit: 11
 - Control centre screens: 22
 - Test files: 11, 324 checks in total
-- Total files: 132
+- Total files: 134

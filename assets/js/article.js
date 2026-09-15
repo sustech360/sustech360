@@ -51,7 +51,6 @@
 
     buildToc();
     progress();
-    controls();
     Site.mountAds();
   }
 
@@ -131,46 +130,6 @@
         tick = false;
       });
     }, { passive: true });
-  }
-
-  function controls() {
-    var host = document.getElementById('controls');
-    if (!host) return;
-    var p = Site.prefs.read();
-    host.appendChild(row('Text', [
-      btn('Smaller', function () { step(-0.0625); }),
-      btn('Larger', function () { step(0.0625); })
-    ]));
-    host.appendChild(row('Theme', ['light', 'sepia', 'dark'].map(function (t) {
-      return btn(t[0].toUpperCase() + t.slice(1), function () { Site.prefs.set('theme', t); });
-    })));
-    host.appendChild(row('Page', [
-      btn('Print', function () { print(); }),
-      btn('Save', save), btn('Share', share)
-    ]));
-
-    function step(d) {
-      var cur = parseFloat(Site.prefs.read().size || 1.0625);
-      Site.prefs.set('size', Math.min(1.5, Math.max(0.9375, cur + d)).toFixed(4));
-    }
-    function row(label, kids) {
-      return el('div', { class: 'row' }, [el('label', { text: label })].concat(kids));
-    }
-    function btn(text, fn) {
-      var b = el('button', { class: 'btn', type: 'button', text: text });
-      b.addEventListener('click', fn);
-      return b;
-    }
-    function save() {
-      var saved = JSON.parse(localStorage.getItem('mag.saved') || '[]');
-      if (saved.indexOf(slug) === -1) saved.push(slug);
-      localStorage.setItem('mag.saved', JSON.stringify(saved));
-    }
-    function share() {
-      if (navigator.share) navigator.share({ title: document.title, url: location.href }).catch(function () {});
-      else if (navigator.clipboard) navigator.clipboard.writeText(location.href);
-    }
-    void p;
   }
 
   function related(a) {

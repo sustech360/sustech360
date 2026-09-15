@@ -1,31 +1,24 @@
 {
   "version": 1,
-  "generated_at": "2026-09-15T06:18:50.650Z",
+  "generated_at": "2026-09-10T00:00:00Z",
   "articles": [
     {
-      "id": "MAG-2026-000001",
-      "slug": "beyond-batteries-the-supercapacitor-revolution",
-      "title": "Beyond Batteries: The Supercapacitor Revolution",
-      "subtitle": "",
-      "summary": "Supercapacitors have always been known for their ability to charge and discharge rapidly. But today, researchers are asking a bigger question: can they store significantly more energy without losing that speed?\n\nNew porous carbons, pseudocapacitive materials, advanced electrolytes, and hybrid designs are bringing that possibility closer. The future of supercapacitors may not be about replacing batteries but about working alongside them to make energy systems faster, smarter, and more efficient.\n\nThe next revolution may not be about replacing batteries.\n\nIt may be about making energy storage smarter.",
+      "id": "MAG-2026-000124",
+      "slug": "sodium-ion-hard-carbon-anodes",
+      "title": "Hard carbon is quietly deciding how far sodium-ion can go",
+      "subtitle": "The cathode gets the headlines. The anode sets the ceiling.",
+      "summary": "Sodium-ion cells are cheap on paper. Whether they are cheap in practice depends on a material most cost models still treat as a rounding error.",
       "category": "energy-storage",
-      "category_name": "Energy storage",
-      "topics": [],
-      "tags": [],
-      "level": "research",
-      "format": "news-analysis",
-      "authors": [
-        {
-          "id": "AUT-14AC8ED90C36",
-          "name": "Krishna Kumar M",
-          "institution": "Christ University"
-        }
-      ],
-      "published_at": "2026-09-15T06:18:35.476Z",
+      "topics": ["sodium-ion", "hard-carbon"],
+      "tags": ["batteries", "materials science", "india"],
+      "level": "understand",
+      "format": "research-highlight",
+      "authors": [{ "id": "AUT-0007", "name": "R. Menon", "institution": "Indian Institute of Science" }],
+      "published_at": "2026-09-08T06:00:00Z",
       "updated_at": null,
-      "reading_minutes": 4,
-      "public_version": 1,
-      "image": "assets/media/MAG-2026-000001/Supercaps.png",
+      "reading_minutes": 7,
+      "public_version": 3,
+      "image": "",
       "sponsored": false
     }
   ]

@@ -25,7 +25,7 @@ Stage 3 and come back — the site is already live at a GitHub address by then.
 
 - [ ] 2.1 Create an Apps Script project, name it `SusTech360 engine`
 - [ ] 2.2 Turn on **Show "appsscript.json"** in project settings
-- [ ] 2.3 Paste in all **30 `.gs` files** plus `appsscript.json` — the list is in `FILES.md`
+- [ ] 2.3 Paste in all **31 `.gs` files** plus `appsscript.json` — the list is in `FILES.md`
 - [ ] 2.4 Add the script properties in **⚙ Project Settings → Script Properties** — then **press Save script properties**
 - [ ] 2.4b Run **`checkSetup`** — every required line must say `OK` before you go on
 - [ ] 2.5 Run `setup()` and approve the permissions Google asks for
@@ -49,7 +49,8 @@ Stage 3 and come back — the site is already live at a GitHub address by then.
 - [ ] 3.3 Create a **public** repository
 - [ ] 3.4 Upload every file and folder from this package
 - [ ] 3.5 Settings → Pages → Deploy from branch `main`, folder `/ (root)` → Save
-- [ ] 3.6 Wait two minutes, open `https://yourname.github.io/repository/`
+- [ ] 3.6 Wait two minutes, open the address in the green box — `https://sustech360.github.io/sustech360/`
+- [ ] 3.6b If that box shows your domain instead, a custom domain is already set. Clear it in Settings → Pages to view the site now; you add it back at 5.1
 - [ ] 3.7 Open `/admin/`, sign in with the temporary password
 - [ ] 3.8 **Change the password immediately** (Account → Change password)
 
@@ -88,6 +89,10 @@ Stage 3 and come back — the site is already live at a GitHub address by then.
 
 > The two ways this goes wrong: the orange cloud (blocks the certificate) and
 > Flexible SSL (endless redirect loop). Both are in 5.4 and 5.5.
+>
+> If GitHub says **"DNS check unsuccessful"** or **NotServedByPagesError**, the
+> orange cloud is on. Grey every record, then clear and re-enter the custom
+> domain in GitHub to force a fresh check. Full steps: `INSTALL.md` 5.3b.
 
 ---
 

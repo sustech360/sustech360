@@ -76,7 +76,7 @@ anything in it by hand.
 2. Tick **"Show appsscript.json manifest file in editor"**.
 3. Click **Editor** (the `<>` icon) to go back.
 
-### 2.3 Paste in the 30 engine files
+### 2.3 Paste in the 31 engine files
 
 You now copy each file from the `apps-script` folder into the project.
 
@@ -89,7 +89,7 @@ For **each** file in the `apps-script` folder:
    replacing anything already there.
 5. Press **Ctrl+S** (Cmd+S) to save.
 
-It is 30 files ending in `.gs`, plus `appsscript.json`.
+It is 31 files ending in `.gs`, plus `appsscript.json`.
 
 Two exceptions:
 
@@ -97,7 +97,7 @@ Two exceptions:
 - `appsscript.json` already exists — open it and replace its contents with the
   version from the folder.
 
-**The list of 30 files is in `docs/FILES.md`, under "The engine".** Tick them off as you go. Getting
+**The list of 31 files is in `docs/FILES.md`, under "The engine".** Tick them off as you go. Getting
 a name wrong (`auth` instead of `Auth`) will cause errors later, so check the
 capital letters.
 
@@ -140,7 +140,24 @@ GitHub. This is where people most often come unstuck, so go slowly.
 > identical either way. If setup fails with "Missing script property", this is
 > almost certainly why.
 
-### 2.4b Check before you run anything
+### 2.4b If the settings will not stick
+
+If you press Save and `setup()` still says "Missing script property", do not
+fight the screen. Write them from code instead — `Bootstrap.gs` is in the engine
+files for exactly this:
+
+1. Open **`Bootstrap.gs`** in the editor.
+2. Replace each `PASTE_…` with your value.
+3. Function dropdown → **`setPropertiesOnce`** → **Run**.
+4. Function dropdown → **`whatCanISee`** → **Run**, and read the log.
+5. When it looks right, go back to `Bootstrap.gs`, blank the values out, save.
+
+`whatCanISee` is worth running whenever something looks wrong. It prints every
+property the script can actually read, with square brackets around each name —
+so `[SPREADSHEET_ID ]` with a trailing space, which is invisible on the settings
+screen and breaks the lookup exactly as a typo would, shows up immediately.
+
+### 2.4c Check before you run anything
 
 Before `setup()`, run the check. It changes nothing and prints what the engine
 can actually see.
@@ -253,11 +270,22 @@ it is safe for it to be public.
 1. In your repository: **Settings** (top row) → **Pages** (left sidebar).
 2. Under "Build and deployment", set **Source** to **Deploy from a branch**.
 3. Set the branch to **main** and the folder to **/ (root)**. Click **Save**.
-4. Wait two or three minutes, then reload. A green box appears with your
-   address: `https://yourname.github.io/sustech360/`
+4. Wait two or three minutes, then reload. A green box appears at the top with
+   your address. For a repository called `sustech360` owned by `sustech360`,
+   that is `https://sustech360.github.io/sustech360/`.
 5. Open it. **You should see the site**, with the logo and navigation.
 
 If you see a plain list of files instead, wait another minute and reload.
+
+> **If the green box shows `sustech360.com` instead**, a custom domain is
+> already set — either you entered it, or a `CNAME` file arrived with your
+> upload. That is not a problem, but it does mean the site will not open until
+> the domain works, and GitHub will warn that the DNS check failed. That warning
+> belongs to Part 5 and is expected until you get there.
+>
+> To see the site now rather than waiting: **Settings → Pages → clear the custom
+> domain → Save**. The site returns to the `github.io` address immediately. You
+> put the domain back at step 5.1, and nothing is lost.
 
 ### 3.5 Sign in and change your password
 
@@ -304,9 +332,29 @@ This step gives it permission to write to your repository.
    configuration**.
 4. Wait a minute, reload the website. Your new tagline is on it.
 
-**If it fails:** the message tells you which file and which error code. `401` or
-`403` means the token is wrong or lacks Contents: Read and write. `404` usually
-means `GITHUB_REPO` is misspelled.
+**If it fails, do not guess from the code.** In the Apps Script editor, choose
+**`checkPublishing`** in the function dropdown and press **Run**. It tests each
+link separately — the repository name, the token, whether GitHub will admit the
+repository exists, and whether it will actually accept a write — and says which
+one is broken. It writes one tiny file and deletes it again.
+
+| It says | What to do |
+|---|---|
+| `MISSING GITHUB_TOKEN` or `MISSING GITHUB_REPO` | Add it in Project Settings → Script Properties, and press **Save script properties** |
+| `WRONG GITHUB_REPO` | It must be `sustech360/sustech360` — two names, one slash, not the web address |
+| Lookup returned **401** | The token is invalid, truncated or expired. Make a new one |
+| Lookup returned **404** | The name is wrong, or the token was never given access to this repository |
+| Write returned **403** | The token can read but not write. It needs Contents: **Read and write** |
+
+> **If the repository belongs to an organisation** — which `sustech360/sustech360`
+> does if you created it under an organisation rather than your personal account
+> — fine-grained tokens are refused until the organisation allows them:
+> organisation **Settings → Personal access tokens → Allow access**. Until then
+> every request returns 404, which looks exactly like a misspelled name.
+>
+> The quicker way past it is a **classic token**: GitHub → Settings → Developer
+> settings → Tokens (classic) → Generate new token → tick **`repo`**. Less
+> precise than a fine-grained token, and it works immediately.
 
 ---
 
@@ -322,8 +370,9 @@ tell GitHub the domain, then point the domain at GitHub.
 3. GitHub will say "DNS check in progress". That is expected — we have not done
    the DNS yet.
 
-The `CNAME` file already in your upload contains `sustech360.com`, so this
-should already be filled in. If it is, leave it alone.
+Typing it here makes GitHub create a `CNAME` file in your repository. That file
+is what tells the server which domain to answer to — you do not create it
+yourself, and you should not delete it.
 
 ### 5.2 Point the domain at GitHub
 
@@ -357,6 +406,63 @@ and no trailing slash.
 3. **Never leave it on "Flexible."** Flexible plus GitHub Pages produces an
    endless redirect loop and your site appears broken. This is the single most
    common mistake with this setup.
+
+### 5.3b If GitHub says "DNS check unsuccessful"
+
+The full message is usually:
+
+> Both sustech360.com and its alternate name are improperly configured.
+> Domain does not resolve to the GitHub Pages server (NotServedByPagesError).
+
+**This almost always means the orange cloud is on.** When Cloudflare proxies a
+record, the domain resolves to Cloudflare's servers rather than GitHub's. GitHub
+looks up your domain, does not find itself, and refuses to go further — which
+also means it will not issue your certificate, so "Enforce HTTPS" stays greyed
+out.
+
+Note that GitHub may still say *"Your site is live at http://sustech360.com/"*
+at the same time. That line only reflects the `CNAME` file in your repository.
+It is not evidence that DNS is correct.
+
+**See what your domain actually returns.** Open
+[whatsmydns.net/#A/sustech360.com](https://www.whatsmydns.net/#A/sustech360.com).
+
+| What you see | What it means |
+|---|---|
+| `185.199.108.153` and the other three | DNS is right — the problem is elsewhere |
+| `104.x.x.x` or `172.67.x.x` | Cloudflare is proxying. Turn the orange cloud off |
+| Nothing, or something else | The records are missing or wrong |
+
+**Fix it in Cloudflare → DNS → Records.** You want exactly these six, and
+nothing else on `@` or `www`:
+
+| Type | Name | Content | Proxy |
+|---|---|---|---|
+| A | `@` | `185.199.108.153` | **DNS only** |
+| A | `@` | `185.199.109.153` | **DNS only** |
+| A | `@` | `185.199.110.153` | **DNS only** |
+| A | `@` | `185.199.111.153` | **DNS only** |
+| CNAME | `www` | `sustech360.github.io` | **DNS only** |
+
+Click the orange cloud on any proxied row to turn it grey. Delete anything else
+pointing at `@` or `www` — a parked page record, an AAAA record, an old CNAME.
+Each of those breaks the check on its own.
+
+The `www` target is your GitHub account followed by `.github.io`, with **no
+repository name after it**.
+
+**Then make GitHub look again.** Settings → Pages → clear the custom domain →
+Save → type `sustech360.com` again → Save. That forces a fresh check rather than
+waiting for the next scheduled one. Give it five to twenty minutes.
+
+When the check passes you will see a tick beside the domain, and **Enforce
+HTTPS** becomes clickable within the hour.
+
+> **Do not turn the orange cloud back on until HTTPS is working.** Once GitHub
+> has issued the certificate you may re-enable the proxy if you want
+> Cloudflare's caching — with SSL/TLS set to **Full**, never Flexible. If the
+> site then misbehaves, turn it grey again: the site works perfectly well
+> without the proxy.
 
 ### 5.4 Wait, then switch on HTTPS
 
@@ -464,13 +570,16 @@ every part of the chain before a real contributor sees it.
 
 | What you see | What it means |
 |---|---|
+| GitHub: "DNS check unsuccessful", "NotServedByPagesError" | The orange cloud is on, or a stray record sits on `@` or `www`. See 5.3b |
+| "Enforce HTTPS" stays greyed out | The DNS check has not passed yet. It cannot issue a certificate until it does |
+| `setup()` says "Missing script property" after you saved them | Run `whatCanISee`. Usually: not saved, a stray space, wrong case, or a different project |
 | Control Centre says "the backend did not respond" | The `/exec` URL in `admin/config.js` is wrong, or the deployment was deleted. Redeploy and paste the new URL |
 | "Your role does not allow that" | Correct behaviour. Only the supervisor account publishes |
 | Publishing fails with 401 or 403 | The GitHub token has expired or lacks Contents: Read and write |
 | Publishing fails with 404 | `GITHUB_REPO` is misspelled. It is `username/repository`, nothing else |
 | Site shows old content after publishing | Wait two minutes for GitHub, then reload with Ctrl+Shift+R |
 | "Too many redirects" on the domain | Cloudflare SSL mode is Flexible. Set it to Full |
-| The domain shows a GitHub 404 page | The `CNAME` file is missing from the repository, or the custom domain field in Settings → Pages is empty |
+| The domain shows a GitHub 404 page | The custom domain field in Settings → Pages is empty, or the `CNAME` file GitHub created there was deleted |
 | Emails are not arriving | Gmail's daily limit is 100 messages on a free account, 1,500 on Workspace. Check **Newsletter** for the remaining quota |
 | An author cannot sign in | Check **Users**: their status is probably Suspended, or they never set a password |
 

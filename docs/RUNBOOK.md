@@ -92,10 +92,10 @@ next", and confirmation that your spreadsheet and folder actually open.
 *It changes nothing.* It exists so a wrong id or an unsaved row is caught here
 rather than halfway through setup.
 
-**7. Paste in the 30 engine files.**
+**7. Paste in the 31 engine files.**
 One file at a time: **+ → Script**, name it exactly as in `docs/FILES.md`
 (without `.gs` — Apps Script adds it), paste, save. Then `appsscript.json`.
-*You should see:* 31 files in the left-hand list.
+*You should see:* 32 files in the left-hand list.
 *This is the tedious part.* Take a break after it rather than during it.
 
 **8. Run `setup()`.**
@@ -154,8 +154,11 @@ the folder (the files, not the folder itself) → Commit.
 **15. Turn the website on.**
 Settings → Pages → Source **Deploy from a branch** → `main` → `/ (root)` → Save.
 Wait two minutes.
-*You should see:* the site at `https://yourname.github.io/sustech360/`, with the
-logo, the navigation and the sample article.
+*You should see:* a green box with your address —
+`https://sustech360.github.io/sustech360/` for a repository named `sustech360` —
+and, on opening it, the site with its logo, navigation and sample article.
+*If the box shows your domain instead,* a custom domain is already set; clear it
+in Settings → Pages to look at the site now, and put it back at step 20.
 
 **16. Sign in and change the password.**
 Go to `/admin/` → sign in with your email and value 7 → **Account → Change
@@ -184,6 +187,7 @@ Apps Script → Project Settings → Script Properties → `GITHUB_TOKEN` → pa
 
 **19. Test publishing.**
 Control Centre → **Publish** → **Publish configuration**.
+*If it fails:* Apps Script → function dropdown → **`checkPublishing`** → Run.
 *You should see:* new files appearing in the repository under `data/`, within a
 minute.
 *If it fails,* the token is wrong, expired, or lacks Contents: write. Nothing
@@ -197,8 +201,8 @@ You can pause here for a day. Everything already works at the github.io address.
 
 **20. Tell GitHub the domain.**
 Settings → Pages → Custom domain → `sustech360.com` → Save.
-*You should see:* a `CNAME` file appear in the repository. It is already in this
-package, so it may simply stay as it is.
+*You should see:* GitHub creates a `CNAME` file in your repository. It writes
+that file itself — you never edit it, and deleting it breaks the domain.
 
 **21. Point the domain at GitHub.**
 Cloudflare → sustech360.com → DNS:
@@ -281,8 +285,9 @@ before step 11.** Everything else is preparation for those two.
 | 8 | `setup()` throws "Missing script property" | A property missing, unsaved, or typed in the wrong case. Run `checkSetup` — it lists every one at once |
 | 15 | Page loads but is empty | `admin/config.js` still has the placeholder address |
 | 16 | "The backend did not respond" | The `/exec` address is wrong, or the deployment was never made |
-| 19 | Publishing fails | Token missing, expired, or without Contents: write |
-| 23 | Domain never gets HTTPS | Orange cloud on the DNS records, or SSL set to Flexible |
+| 19 | Publishing fails | Run `checkPublishing` — it names the broken link. If the repository is owned by an organisation, fine-grained tokens must be allowed by that organisation first, and everything returns 404 until they are |
+| 21 | GitHub: "DNS check unsuccessful" / NotServedByPagesError | The orange cloud is on. Grey it, then re-save the domain in GitHub. `INSTALL.md` 5.3b |
+| 23 | Domain never gets HTTPS | The DNS check has not passed, so no certificate can be issued |
 | Later | A change does nothing | Configuration changed but never published — see `INSTALL.md` Part 8 |
 
 ---

@@ -10,15 +10,84 @@
   var me = null;
 
   var $ = function (id) { return document.getElementById(id); };
+
+  /* A dropped connection is not a sign-out. The old build cleared the token on
+     any failed request, so a single hiccup — an Apps Script cold start, a train
+     tunnel — meant signing in again and losing what you were doing. */
+  var callThrough = api.call.bind(api);
+  api.call = function (action, payload) {
+    return callThrough(action, payload).then(function (data) {
+      touchToken();
+      return data;
+    }, function (e) {
+      if (e && e.code === 'unauthenticated') {
+        endSession('Your session ended. Sign in again.');
+      }
+      throw e;
+    });
+  };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
   }); };
 
-  /* ---- session: token in sessionStorage, gone when the tab closes ---- */
+  /* ---- session ----
+     A refresh, a second tab, or coming back after lunch should not mean typing
+     a password again. The session is kept for three hours of inactivity and
+     every request you make extends it, so an afternoon of work never times out
+     underneath you. Signing out ends it immediately, in every tab.
 
-  function saveToken(t) { try { sessionStorage.setItem('mag.token', t); } catch (e) {} }
-  function loadToken() { try { return sessionStorage.getItem('mag.token'); } catch (e) { return null; } }
-  function clearToken() { try { sessionStorage.removeItem('mag.token'); } catch (e) {} }
+     It lives in localStorage rather than sessionStorage, which is the deliberate
+     trade: it survives a closed tab, so on a shared machine sign out rather
+     than just closing the window. */
+
+  var SESSION_KEY = 's360.session';
+  var IDLE_LIMIT = 3 * 60 * 60 * 1000;
+
+  function saveToken(t) {
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ token: t, until: Date.now() + IDLE_LIMIT }));
+    } catch (e) {}
+  }
+
+  function loadToken() {
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) {
+        // Carry over anyone signed in under the previous build.
+        var legacy = sessionStorage.getItem('mag.token');
+        if (legacy) { saveToken(legacy); sessionStorage.removeItem('mag.token'); return legacy; }
+        return null;
+      }
+      var rec = JSON.parse(raw);
+      if (!rec || !rec.token) return null;
+      if (Date.now() > rec.until) { clearToken(); return null; }
+      return rec.token;
+    } catch (e) { return null; }
+  }
+
+  function touchToken() {
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      var rec = JSON.parse(raw);
+      rec.until = Date.now() + IDLE_LIMIT;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(rec));
+    } catch (e) {}
+  }
+
+  function clearToken() {
+    try { localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem('mag.token'); } catch (e) {}
+  }
+
+  /** Back to the sign-in screen, with a reason. Used when the session really
+   *  has ended — never because one request failed. */
+  function endSession(note) {
+    clearToken();
+    api.setToken(null);
+    $('app').classList.add('hidden');
+    $('login').classList.remove('hidden');
+    if (note) message($('loginmsg'), note, 'err');
+  }
 
   function message(host, text, kind) {
     host.innerHTML = '<div class="msg ' + (kind || 'ok') + '">' + esc(text) + '</div>';
@@ -28,6 +97,9 @@
     invalid_credentials: 'That email and password do not match.',
     locked: 'Too many attempts. Wait a few minutes and try again.',
     mfa_required: 'Enter the six-digit code from your authenticator app.',
+    bad_code: 'That code did not match. Codes change every 30 seconds — try the current one.',
+    not_started: 'Start the setup first.',
+    not_enabled: 'Two-step sign in is not on for this account.',
     account_disabled: 'This account is suspended. Contact the supervisor admin.',
     unauthenticated: 'Your session ended. Sign in again.',
     forbidden: 'Your role does not allow that.',
@@ -54,8 +126,8 @@
 
   /* ---- login ---- */
 
-  $('signin').addEventListener('click', function () {
-    var btn = this;
+  function submitSignIn() {
+    var btn = $('signin');
     btn.disabled = true;
     api.call('login', {
       email: $('email').value.trim(),
@@ -68,8 +140,25 @@
       $('password').value = '';
       start(res.must_change_password);
     }).catch(function (e) {
-      message($('loginmsg'), explain(e), 'err');
+      // The code box appears the moment the engine says it needs one, and not
+      // before: most people never have one to type.
+      if (e && e.code === 'mfa_required') {
+        $('mfarow').classList.remove('hidden');
+        $('mfa').focus();
+        message($('loginmsg'), 'Enter the six-digit code from your authenticator app.', 'ok');
+      } else {
+        message($('loginmsg'), explain(e), 'err');
+      }
     }).then(function () { btn.disabled = false; });
+  }
+
+  $('signin').addEventListener('click', submitSignIn);
+
+  // Enter submits, from any of the three boxes.
+  ['email', 'password', 'mfa'].forEach(function (id) {
+    $(id).addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); submitSignIn(); }
+    });
   });
 
   $('signout').addEventListener('click', function () {
@@ -489,12 +578,14 @@
     },
 
     account: function (v) {
-      v.innerHTML = '<h2>Account</h2><div class="card">' +
+      v.innerHTML = '<div class="card">' +
         '<label>Current password</label><input id="p-cur" type="password" autocomplete="current-password">' +
         '<label>New password</label><input id="p-new" type="password" autocomplete="new-password">' +
         '<p class="hint">At least 12 characters, with upper case, lower case and digits.</p>' +
         '<div class="rowbtns"><button class="act" id="p-save">Change password</button>' +
-        '<button class="danger" id="p-all">Sign out all devices</button></div><div id="accountmsg"></div></div>';
+        '<button class="danger" id="p-all">Sign out all devices</button></div><div id="accountmsg"></div></div>' +
+        '<div class="card" id="mfacard"><h2>Two-step sign in</h2><p class="hint">Loading…</p></div>';
+      mfaCard();
       $('p-save').addEventListener('click', function () {
         api.call('changePassword', { current: $('p-cur').value, next: $('p-new').value })
           .then(function () { message($('accountmsg'), 'Password changed. Sign in again.', 'ok');
@@ -509,6 +600,55 @@
     }
   };
 
+  /** Turning two-step sign in on, and off again. The code box on the sign-in
+   *  page appears only for people who have done this. */
+  function mfaCard() {
+    var card = $('mfacard');
+    api.call('mfaState').then(function (state) {
+      if (state.enabled) {
+        card.innerHTML = '<h2>Two-step sign in</h2>' +
+          '<p><strong>On.</strong> Signing in asks for a code from your authenticator app as well as your password.</p>' +
+          '<label for="mfa-off">Code from your app</label>' +
+          '<input id="mfa-off" inputmode="numeric" maxlength="6" placeholder="6 digits">' +
+          '<div class="rowbtns"><button class="danger" id="mfa-disable">Turn it off</button></div>' +
+          '<div id="mfamsg"></div>';
+        $('mfa-disable').addEventListener('click', function () {
+          api.call('disableMfa', { code: $('mfa-off').value.trim() })
+            .then(function () { mfaCard(); })
+            .catch(function (e) { message($('mfamsg'), explain(e), 'err'); });
+        });
+        return;
+      }
+      card.innerHTML = '<h2>Two-step sign in</h2>' +
+        '<p>Off. A password alone opens this account. Two-step sign in asks for a six-digit ' +
+        'code from your phone as well — worth the twenty seconds it takes to set up, ' +
+        'particularly for the supervisor admin.</p>' +
+        '<div class="rowbtns"><button class="act" id="mfa-start">Set it up</button></div>' +
+        '<div id="mfamsg"></div>';
+      $('mfa-start').addEventListener('click', function () {
+        api.call('beginMfa').then(function (setup) {
+          card.innerHTML = '<h2>Two-step sign in</h2>' +
+            '<p><strong>1.</strong> In your authenticator app — Google Authenticator, Authy, 1Password — ' +
+            'add an account by typing this key:</p>' +
+            '<p><code style="font-size:1rem;letter-spacing:.08em">' + esc(setup.secret) + '</code></p>' +
+            '<p class="hint">Write it somewhere safe as well. Lose the phone without it and only the ' +
+            'supervisor admin can let you back in.</p>' +
+            '<p><strong>2.</strong> Type the six digits it shows:</p>' +
+            '<label for="mfa-code">Code</label>' +
+            '<input id="mfa-code" inputmode="numeric" maxlength="6" placeholder="6 digits">' +
+            '<div class="rowbtns"><button class="act" id="mfa-confirm">Turn it on</button>' +
+            '<button class="ghost" id="mfa-cancel">Not now</button></div><div id="mfamsg"></div>';
+          $('mfa-confirm').addEventListener('click', function () {
+            api.call('enableMfa', { code: $('mfa-code').value.trim() })
+              .then(function () { mfaCard(); })
+              .catch(function (e) { message($('mfamsg'), explain(e), 'err'); });
+          });
+          $('mfa-cancel').addEventListener('click', mfaCard);
+        }).catch(function (e) { message($('mfamsg'), explain(e), 'err'); });
+      });
+    }).catch(function (e) { card.innerHTML = '<h2>Two-step sign in</h2>'; message(card, explain(e), 'err'); });
+  }
+
   if (window.ADMIN_EXTRA_VIEWS) {
     Object.assign(VIEWS, window.ADMIN_EXTRA_VIEWS({
       api: api, esc: esc, el: el, message: message, explain: explain,
@@ -518,10 +658,32 @@
 
   /* ---- resume an existing session ---- */
 
+  /* Sign out in one tab, and the others follow. */
+  addEventListener('storage', function (e) {
+    if (e.key === SESSION_KEY && !e.newValue && !$('app').classList.contains('hidden')) {
+      endSession('Signed out in another tab.');
+    }
+  });
+
+  /* Three hours of doing nothing ends it, checked once a minute rather than
+     only on the next click. */
+  setInterval(function () {
+    if ($('app').classList.contains('hidden')) return;
+    if (!loadToken()) endSession('Signed out after three hours of inactivity.');
+  }, 60000);
+
   var token = loadToken();
   if (token) {
     api.setToken(token);
-    api.call('me').then(function (res) { me = res; start(false); })
-      .catch(function () { clearToken(); });
+    api.call('me').then(function (res) {
+      me = res;
+      start(false);
+    }).catch(function (e) {
+      // Only an answer from the server ends the session. Anything else — no
+      // network, a cold engine, a bad gateway — leaves it alone and says so.
+      if (e && e.code === 'unauthenticated') return;
+      message($('loginmsg'),
+        'Could not reach the engine just now. Your session is still valid — reload in a moment.', 'err');
+    });
   }
 })();
