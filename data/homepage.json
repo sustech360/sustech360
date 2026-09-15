@@ -12,7 +12,8 @@
       "active": true,
       "starts": null,
       "ends": null,
-      "items": []
+      "items": [],
+      "blurb": "2026-09-13T17:56:08.819Z"
     },
     {
       "id": "ad-top",
@@ -26,7 +27,8 @@
       "starts": null,
       "ends": null,
       "items": [],
-      "placement": "HOME_TOP"
+      "placement": "HOME_TOP",
+      "blurb": "2026-09-13T17:56:09.716Z"
     },
     {
       "id": "latest",
@@ -39,7 +41,8 @@
       "active": true,
       "starts": null,
       "ends": null,
-      "items": []
+      "items": [],
+      "blurb": "2026-09-13T17:56:10.617Z"
     },
     {
       "id": "storage",
@@ -52,7 +55,8 @@
       "active": true,
       "starts": null,
       "ends": null,
-      "items": []
+      "items": [],
+      "blurb": "2026-09-13T17:56:11.594Z"
     },
     {
       "id": "research",
@@ -65,7 +69,8 @@
       "active": true,
       "starts": null,
       "ends": null,
-      "items": []
+      "items": [],
+      "blurb": "2026-09-13T17:56:12.420Z"
     },
     {
       "id": "newsletter",
@@ -78,7 +83,8 @@
       "active": true,
       "starts": null,
       "ends": null,
-      "items": []
+      "items": [],
+      "blurb": "2026-09-13T17:56:13.385Z"
     }
   ]
 }
