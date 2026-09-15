@@ -112,6 +112,7 @@
     ['Editorial', [
       ['queue', 'Queue'],
       ['reviews', 'Your reviews'],
+      ['published', 'Published pages'],
       ['issues', 'Magazine issues']
     ]],
     ['People', [
@@ -133,6 +134,7 @@
     ]],
     ['Audience and income', [
       ['newsletter', 'Newsletter'],
+      ['emails', 'Email templates'],
       ['social', 'Social queue'],
       ['advertising', 'Advertising'],
       ['billing', 'Billing']
@@ -147,7 +149,8 @@
   // Screens reached from inside another screen rather than from the menu.
   var SUBTITLES = {
     dashboard: 'Dashboard', desk: 'Article', review: 'Review',
-    guideline: 'Guideline', campaign: 'Newsletter campaign', issue: 'Magazine issue'
+    guideline: 'Guideline', campaign: 'Newsletter campaign', issue: 'Magazine issue',
+    emailtemplate: 'Email template', correction: 'Correct a published page'
   };
 
   function titleOf(name) {
