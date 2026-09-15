@@ -1,14 +1,14 @@
 {
   "version": 1,
-  "generated_at": "2026-09-10T00:00:00Z",
+  "generated_at": "2026-09-15T06:18:52.172Z",
   "docs": [
     {
-      "s": "sodium-ion-hard-carbon-anodes",
-      "t": "Hard carbon is quietly deciding how far sodium-ion can go",
-      "d": "Sodium-ion cells are cheap on paper. Whether they are cheap in practice depends on a material most cost models still treat as a rounding error.",
+      "s": "beyond-batteries-the-supercapacitor-revolution",
+      "t": "Beyond Batteries: The Supercapacitor Revolution",
+      "d": "Supercapacitors have always been known for their ability to charge and discharge rapidly. But today, researchers are asking a bigger question: can they store significantly more energy without losing that speed?\n\nNew porous carbons, pseudocapacitive materials, advanced electrolytes, and hybrid designs are bringing that possibility closer. The future of supercapacitors may not be about replacing batteries but about working alongside them to make energy systems faster, smarter, and more efficient.\n\nThe next revolution may not be about replacing batteries.\n\nIt may be about making energy storage smarter.",
       "c": "Energy storage",
-      "k": "sodium ion hard carbon anode battery pyrolysis biomass first cycle efficiency plateau nanopore",
-      "p": "2026-09-08"
+      "k": "energy supercapacitors could important batteries power surface researchers electrode energy-storage voltage storing large quickly charge materials ions while flexible when them systems battery they electrolyte storage question longer simply material exploring supercapacitor about increasingly store over other extremely much these many there changing device makes carbon because area where provide another part capacitance therefore electrolytes future better together respond demand",
+      "p": "2026-09-14T18:30:00.000Z"
     }
   ]
 }
