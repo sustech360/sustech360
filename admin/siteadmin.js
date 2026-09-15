@@ -72,6 +72,21 @@
               '<td>' + (s.count || '—') + '</td><td>' + (s.active ? 'On' : 'Off') + '</td>' +
               '<td><button class="ghost" data-sec="' + esc(s.section_id) + '">' + (s.active ? 'Turn off' : 'Turn on') + '</button></td></tr>';
           }).join('') + '</tbody></table></div>' +
+          (function () {
+            var news = cfg.homepage.filter(function (x) { return x.type === 'newsletter'; })[0];
+            if (!news) return '';
+            return '<div class="card"><h2>The subscription block</h2>' +
+              '<p class="hint">Optional in two ways. Turn the section off above to remove it from the homepage, ' +
+              'or turn the NEWSLETTER switch off in Sections and flags to close subscriptions altogether — ' +
+              'the block then disappears by itself rather than collecting addresses nobody will write to.</p>' +
+              '<label for="nl-title">Heading</label>' +
+              '<input id="nl-title" value="' + esc(news.title || '') + '">' +
+              '<label for="nl-blurb">The line underneath</label>' +
+              '<input id="nl-blurb" value="' + esc(news.blurb || '') + '" ' +
+              'placeholder="One email a week: what published, what it means, and what to read next.">' +
+              '<div class="rowbtns"><button class="act" id="nl-save">Save the wording</button></div></div>';
+          })() +
+
           '<div class="card"><h2>Add a section</h2>' +
           '<label for="sid">Identifier</label><input id="sid" placeholder="hydrogen-watch">' +
           '<label for="stitle">Heading</label><input id="stitle">' +
@@ -90,6 +105,18 @@
               .catch(function (e) { message(document.getElementById('hmsg'), explain(e), 'err'); });
           });
         });
+
+        var nlSave = document.getElementById('nl-save');
+        if (nlSave) {
+          nlSave.addEventListener('click', function () {
+            var news = cfg.homepage.filter(function (x) { return x.type === 'newsletter'; })[0];
+            api.call('saveHomepageSection', Object.assign({}, news, {
+              title: document.getElementById('nl-title').value,
+              blurb: document.getElementById('nl-blurb').value
+            })).then(refresh(v, 'homepage'))
+              .catch(function (e) { message(document.getElementById('hmsg'), explain(e), 'err'); });
+          });
+        }
 
         document.getElementById('addsec').addEventListener('click', function () {
           api.call('saveHomepageSection', {
@@ -175,6 +202,24 @@
           }).join('') +
           '<p class="hint">Colours only. A value with a semicolon or a url() is refused — these go straight into the page.</p>' +
           '<div class="rowbtns"><button class="act" id="savetokens">Save palette</button></div></div>' +
+          '<div class="card"><h2>Social links in the footer</h2>' +
+          '<p class="hint">These appear at the bottom of every page. Leave one blank to hide it — that is the off switch.</p>' +
+          [['linkedin', 'LinkedIn', 'https://linkedin.com/company/…'],
+           ['x', 'X', 'https://x.com/…'],
+           ['facebook', 'Facebook', 'https://facebook.com/…'],
+           ['instagram', 'Instagram', 'https://instagram.com/…'],
+           ['youtube', 'YouTube', 'https://youtube.com/@…'],
+           ['telegram', 'Telegram', 'https://t.me/…'],
+           ['whatsapp', 'WhatsApp', 'https://wa.me/91…'],
+           ['researchgate', 'ResearchGate', 'https://researchgate.net/profile/…'],
+           ['email', 'Email', 'editor@sustech360.com'],
+           ['rss', 'RSS', 'rss/feed.xml']].map(function (f) {
+            return '<label for="s-' + f[0] + '">' + esc(f[1]) + '</label>' +
+              '<input id="s-' + f[0] + '" data-social="' + f[0] + '" placeholder="' + esc(f[2]) + '" value="' +
+              esc(((s.social || {})[f[0]]) || '') + '">';
+          }).join('') +
+          '<div class="rowbtns"><button class="act" id="savesocial">Save social links</button></div></div>' +
+
           '<div class="card"><h2>Analytics and ads</h2>' +
           '<label for="ga">GA4 measurement id</label><input id="ga" value="' + esc((s.analytics || {}).ga4_id || '') + '" placeholder="G-XXXXXXX">' +
           '<label for="adsense">AdSense client</label><input id="adsense" value="' + esc((s.ads || {}).adsense_client || '') + '" placeholder="ca-pub-…">' +
@@ -194,6 +239,17 @@
             .then(function () { message(document.getElementById('amsg'), 'Palette saved. Publish to make it live.', 'ok'); })
             .catch(function (e) { message(document.getElementById('amsg'), explain(e), 'err'); });
         });
+        document.getElementById('savesocial').addEventListener('click', function () {
+          var social = {};
+          v.querySelectorAll('[data-social]').forEach(function (i) {
+            social[i.getAttribute('data-social')] = i.value.trim();
+          });
+          api.call('saveSiteSettings', { social: social })
+            .then(function () { message(document.getElementById('amsg'),
+              'Saved. Publish to put them on the site.', 'ok'); })
+            .catch(function (e) { message(document.getElementById('amsg'), explain(e), 'err'); });
+        });
+
         document.getElementById('savemeasure').addEventListener('click', function () {
           api.call('saveSiteSettings', {
             analytics: { ga4_id: document.getElementById('ga').value },
