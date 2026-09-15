@@ -20,7 +20,6 @@ DESC = {
  '404.html': ('1', 'Page not found.'),
  'robots.txt': ('1', 'Keeps crawlers out of /admin/ and /author/.'),
  'sitemap.xml': ('1', 'Regenerated on every publication.'),
- 'CNAME': ('—', 'Tells GitHub Pages the site is sustech360.com.'),
  'rss/feed.xml': ('1', 'The feed. Only published articles ever enter it.'),
  'assets/css/main.css': ('1', 'The whole stylesheet. Colours come from settings at runtime.'),
  'assets/js/api.js': ('1', 'The single data boundary. Swap this to change database.'),
@@ -55,6 +54,8 @@ DESC = {
  'admin/issues-admin.js': ('8', 'The issue composer.'),
  'admin/performance.js': ('9', 'Performance centre and payload budget.'),
  'admin/billing.js': ('10', 'Customers, orders, invoices, payments.'),
+ 'admin/email.js': ('—', 'Email centre: every message, who sends it, where replies go.'),
+ 'admin/published.js': ('—', 'What is live, and the supervisor-only corrections to it.'),
 
  # ---- the author portal ----
  'author/index.html': ('2', 'The author portal shell.'),
@@ -66,6 +67,7 @@ DESC = {
  'apps-script/appsscript.json': ('1', 'Apps Script project settings and permissions.'),
  'apps-script/Code.gs': ('1', 'The single entry point and the action router.'),
  'apps-script/Config.gs': ('1', 'Reads secrets from Script Properties. None are in the code.'),
+ 'apps-script/Bootstrap.gs': ('—', 'Two one-off helpers: see what the script can read, and set the settings from code.'),
  'apps-script/Schema.gs': ('1', 'Every table definition, and setup().'),
  'apps-script/Db.gs': ('1', 'The only file that knows the database is a spreadsheet.'),
  'apps-script/Auth.gs': ('1', 'Passwords, sessions, MFA, lockout.'),

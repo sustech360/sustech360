@@ -386,6 +386,69 @@ test('a version that was never approved cannot be put on the site', () => {
     { article_id: article.id, version: 2, reason: 'trying to sneak the rejected text in' }, supervisor.token));
 });
 
+/* ------------------------------------------------ correcting what is live -- */
+
+console.log('\ncorrecting a published article');
+
+test('what is live is listed with everything that can be corrected', () => {
+  const live = call('liveArticles', {}, seniorEditor.token);
+  assert(live.length >= 1, 'nothing is listed as live');
+  const row = live.filter(a => a.id === article.id)[0];
+  assert(row && row.url && row.seo_description !== undefined,
+    'the listing does not carry what an editor would want to correct');
+});
+
+test('only the supervisor may correct a live page', () => {
+  throwsWith('forbidden', () => call('correctLiveArticle', {
+    article_id: article.id, category: 'materials', reason: 'Filed in the wrong section.'
+  }, seniorEditor.token));
+  throwsWith('forbidden', () => call('correctLiveArticle', {
+    article_id: article.id, category: 'materials', reason: 'Filed in the wrong section.'
+  }, administrator.token));
+});
+
+test('a correction needs a reason on the record', () => {
+  throwsWith('reason_required', () => call('correctLiveArticle',
+    { article_id: article.id, level: 'research' }, supervisor.token));
+});
+
+test('a correction republishes immediately and is audited', () => {
+  const before = repo.get('data/articles/' + published.slug + '.json');
+  call('correctLiveArticle', {
+    article_id: article.id, level: 'research', sponsored: false,
+    seo_description: 'Why anode design, not cathode chemistry, decides the cost of sodium-ion cells.',
+    reason: 'Reading level was set too low for this piece.'
+  }, supervisor.token);
+  const after = JSON.parse(repo.get('data/articles/' + published.slug + '.json'));
+  assert(after.level === 'research', 'the correction did not reach the site');
+  assert(/anode design/.test(after.seo.description), 'the description was not updated');
+  assert(after.updated_at, 'a corrected article should say it was updated');
+  assert(before !== JSON.stringify(after), 'nothing changed');
+  assert(Db.all('AuditLogs').some(l => l.action === 'LIVE_ARTICLE_CORRECTED'), 'not audited');
+});
+
+test('the address of a published article cannot be changed', () => {
+  // Somebody already has the link. A slug change is a broken link, not an edit.
+  throwsWith('slug_fixed', () => call('correctLiveArticle', {
+    article_id: article.id, slug: 'a-better-slug', reason: 'Tidying the address up.'
+  }, supervisor.token));
+});
+
+test('a correction cannot move an article into a category that does not exist', () => {
+  throwsWith('unknown_category', () => call('correctLiveArticle', {
+    article_id: article.id, category: 'astrology', reason: 'Testing the guard properly.'
+  }, supervisor.token));
+});
+
+test('the body is not editable this way', () => {
+  // Changing what an article says is a revision and goes back through an
+  // editor. Only how it is filed and described can be corrected here.
+  const doc = JSON.parse(repo.get('data/articles/' + published.slug + '.json'));
+  assert(doc.blocks && doc.blocks.length, 'the text is still there');
+  const actions = Object.keys(sandbox.internals.ACTIONS);
+  assert(actions.indexOf('editLiveBody') === -1, 'there is a direct route to a published body');
+});
+
 /* ------------------------------------------------------------ scheduling -- */
 
 console.log('\nscheduling and archiving');

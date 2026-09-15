@@ -207,6 +207,34 @@ test('the brand and navigation come from the published configuration', async () 
   assert(Array.from(nav).some(a => /energy/i.test(a.textContent)), 'the energy section is missing');
 });
 
+test('an article appears once on the front page, not three times', async () => {
+  // The lead story used to show again at the top of Latest and again under its
+  // own section: three appearances in one screen, which reads as a thin
+  // magazine rather than a considered one.
+  const headlines = Array.from(home.document.querySelectorAll('.card h3, .lead h1'))
+    .map(h => h.textContent.trim());
+  const repeated = headlines.filter((t, i) => headlines.indexOf(t) !== i);
+  assert(!repeated.length, 'repeated on the front page: ' + [...new Set(repeated)].join(' | '));
+});
+
+test('no section announces itself and then apologises', async () => {
+  // A heading above "nothing published here yet" is worse than no heading.
+  const sections = Array.from(home.document.querySelectorAll('#sections .section'));
+  sections.forEach(s => {
+    const heading = s.querySelector('.section__head h2');
+    const empty = s.querySelector('.empty');
+    assert(!(heading && heading.textContent.trim() && empty),
+      'section "' + (heading && heading.textContent) + '" has a heading and no content');
+  });
+});
+
+test('the lead story says what it is and links to its section', async () => {
+  const kicker = home.document.querySelector('.lead .kicker');
+  assert(kicker && kicker.getAttribute('href'), 'the lead has no section label');
+  assert(home.document.querySelector('.lead .standfirst').textContent.length > 20,
+    'the lead has no standfirst, so it is a headline floating on its own');
+});
+
 test('the masthead shows the logo, not a text fallback', async () => {
   const logo = home.document.querySelector('.wordmark img');
   assert(logo, 'the wordmark rendered as text — the configured logo did not load');
@@ -225,9 +253,62 @@ test('the publication name and tagline are the configured ones', async () => {
     'the favicon link points at nothing');
 });
 
+test('the footer carries the social links the control centre set', async () => {
+  call('saveSiteSettings', { social: {
+    linkedin: 'https://www.linkedin.com/company/sustech360',
+    x: 'https://x.com/sustech360',
+    email: 'editor@sustech360.com'
+  }}, supervisor.token);
+  call('publishConfiguration', { note: 'Social links' }, supervisor.token);
+
+  const page2 = await render('index.html');
+  const links = page2.document.querySelectorAll('.footer .social a');
+  assert(links.length === 3, 'expected three links, got ' + links.length);
+  const texts = Array.from(links).map(a => a.textContent);
+  assert(texts.indexOf('LinkedIn') !== -1 && texts.indexOf('X') !== -1, texts.join(', '));
+  const mail = Array.from(links).filter(a => a.textContent === 'Email')[0];
+  assert(mail.getAttribute('href') === 'mailto:editor@sustech360.com',
+    'the email link is not a mailto: ' + mail.getAttribute('href'));
+  // Every page, not just the homepage.
+  const article = await render('article.html', '?a=' + published.slug);
+  assert(article.document.querySelectorAll('.footer .social a').length === 3,
+    'the article footer has no social links');
+});
+
+test('the reader controls and the dark button are gone', async () => {
+  const article = await render('article.html', '?a=' + published.slug);
+  assert(!article.document.getElementById('controls'), 'the reader controls are still on the article page');
+  assert(!article.document.body.textContent.match(/Smaller|Sepia/),
+    'the text and theme controls still render');
+  assert(!home.document.querySelector('[data-theme-set]'), 'the Dark button is still in the masthead');
+});
+
 test('paused and disabled menu items do not appear', async () => {
   const names = Array.from(home.document.querySelectorAll('[data-nav] a')).map(a => a.textContent.trim());
   assert(names.indexOf('Policy') === -1, 'a paused menu item was rendered: ' + names.join(', '));
+});
+
+test('the subscription block is offered only when subscriptions are open', async () => {
+  // With the switch off, the engine refuses to subscribe anyone. Showing the
+  // form anyway collects addresses that will never receive a confirmation.
+  call('setFeatureFlag', { flag: 'NEWSLETTER', state: 'disabled' }, supervisor.token);
+  call('publishConfiguration', { note: 'Newsletter off' }, supervisor.token);
+  const off = await render('index.html');
+  assert(!off.document.querySelector('.newsletter'),
+    'the subscription form is on the page while subscriptions are closed');
+
+  call('setFeatureFlag', { flag: 'NEWSLETTER', state: 'enabled' }, supervisor.token);
+  call('publishConfiguration', { note: 'Newsletter on' }, supervisor.token);
+  const on = await render('index.html');
+  const block = on.document.querySelector('.newsletter');
+  assert(block, 'the form did not come back when subscriptions reopened');
+  assert(block.querySelector('input[type=email]'), 'the block has nowhere to type an address');
+});
+
+test('the wording of that block belongs to the editor', async () => {
+  const home2 = JSON.parse(repo.get('data/homepage.json'));
+  const news = home2.sections.filter(s => s.type === 'newsletter')[0];
+  assert(news && news.blurb !== undefined, 'the blurb is not published, so it cannot be edited');
 });
 
 test('an unfillable advertising slot takes up no space', async () => {

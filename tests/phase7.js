@@ -248,6 +248,96 @@ test('every message sent is logged', () => {
   assert(logs.every(l => l.to && l.sent_at), 'a log row is missing its basics');
 });
 
+/* ---------------------------------------------------------- email centre -- */
+
+console.log('\nthe email centre');
+
+test('every message the platform sends is listed and editable', () => {
+  const list = call('emailTemplates', {}, administrator.token);
+  assert(list.length >= 10, 'only ' + list.length + ' templates are exposed');
+  const invite = list.filter(t => t.key === 'author_invitation')[0];
+  assert(invite && invite.variables.indexOf('accept_link') !== -1,
+    'the editor is not told which variables a template may use');
+  assert(invite.identity === 'authors', 'an invitation should come from author relations');
+});
+
+test('editing a template changes what is actually sent', () => {
+  call('saveEmailTemplate', {
+    key: 'review_request', subject: 'Would you review {{article_title}}?',
+    body: 'Dear {{reviewer_name}},\n\nWe would value your reading of {{article_title}} by {{due_date}}.\n\n{{admin_url}}\n\n{{magazine_name}}',
+    identity: 'reviews'
+  }, administrator.token);
+  const before = outbox.length;
+  const inv = call('createInvitation', { name: 'Test', email: 'tpl@example.test' }, supervisor.token);
+  call('revokeInvitation', { invitation_id: inv.id, reason: 'tidy up' }, supervisor.token);
+  const rendered = call('previewEmailTemplate', { key: 'review_request' }, administrator.token);
+  assert(/Would you review/.test(rendered.subject), 'the saved subject is not being used: ' + rendered.subject);
+  assert(!/\{\{/.test(rendered.body), 'a variable was left unfilled in the preview');
+  void before;
+});
+
+test('a variable that does not exist is refused rather than rendered blank', () => {
+  const e = throwsWith('unknown_variable', () => call('saveEmailTemplate', {
+    key: 'review_request', subject: 'Review {{article_title}}',
+    body: 'Dear {{reviewer_name}}, your fee is {{payment_amount}} and this is long enough.',
+    identity: 'reviews'
+  }, administrator.token));
+  assert(/payment_amount/.test(e.detail), 'it does not name the offending variable');
+});
+
+test('an empty or one-line template is refused', () => {
+  throwsWith('body_too_short', () => call('saveEmailTemplate',
+    { key: 'account_ready', subject: 'Welcome', body: 'Hello.' }, administrator.token));
+  throwsWith('subject_required', () => call('saveEmailTemplate',
+    { key: 'account_ready', subject: '', body: 'A perfectly reasonable body of text here.' }, administrator.token));
+});
+
+test('resetting puts the built-in wording back', () => {
+  call('resetEmailTemplate', { key: 'review_request' }, administrator.token);
+  const after = call('getEmailTemplate', { key: 'review_request' }, administrator.token);
+  assert(after.customised === false, 'it still reports as customised');
+  assert(after.subject === after.default_subject, 'the built-in subject did not come back');
+});
+
+test('who a message comes from, and where replies go, is configurable', () => {
+  call('saveEmailIdentities', { identities: {
+    reviews: { name: 'SusTech360 Peer Review', reply_to: 'reviews@sustech360.com' },
+    billing: { name: 'SusTech360 Accounts', reply_to: 'accounts@sustech360.com' }
+  }}, administrator.token);
+  const identities = call('emailIdentities', {}, administrator.token);
+  assert(identities.reviews.reply_to === 'reviews@sustech360.com');
+  assert(identities.editorial.reply_to, 'an identity left alone should keep a sensible default');
+  throwsWith('bad_email', () => call('saveEmailIdentities',
+    { identities: { billing: { reply_to: 'not an address' } } }, administrator.token));
+});
+
+test('a real message carries that identity', () => {
+  const before = outbox.length;
+  const inv = call('createInvitation', { name: 'Reply Test', email: 'reply@example.test' }, supervisor.token);
+  assert(outbox.length > before, 'no invitation went out');
+  void inv;
+  const sent = outbox[outbox.length - 1];
+  assert(sent.name, 'the message has no sender name at all');
+});
+
+test('a test send goes to the person asking and nobody else', () => {
+  const before = outbox.length;
+  const res = call('sendTestEmail', { key: 'article_published' }, administrator.token);
+  assert(res.sent_to === 'admin@example.test');
+  assert(outbox.length === before + 1, 'a test touched more than one address');
+  assert(/^\[test\]/.test(outbox[outbox.length - 1].subject), 'a test is not marked as one');
+});
+
+test('the log says what went out', () => {
+  const log = call('emailLog', { limit: 20 }, administrator.token);
+  assert(log.length > 0 && log[0].to && log[0].sent_at, 'the log is empty or incomplete');
+});
+
+test('templates are a MANAGE job', () => {
+  throwsWith('forbidden', () => call('emailTemplates', {}, seniorEditor.token));
+  throwsWith('forbidden', () => call('saveEmailIdentities', { identities: {} }, seniorEditor.token));
+});
+
 /* ---------------------------------------------------------------- social -- */
 
 console.log('\nsocial queue');

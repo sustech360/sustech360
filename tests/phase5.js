@@ -180,6 +180,38 @@ test('analytics and adsense identifiers are checked for shape', () => {
   call('saveSiteSettings', { analytics: { ga4_id: 'G-ABC1234567' } }, administrator.token);
 });
 
+test('social links are checked before they can appear on every page', () => {
+  throwsWith('bad_social_url', () => call('saveSiteSettings',
+    { social: { linkedin: 'linkedin.com/company/sustech360' } }, administrator.token));
+  throwsWith('wrong_platform', () => call('saveSiteSettings',
+    { social: { youtube: 'https://vimeo.com/sustech360' } }, administrator.token));
+  throwsWith('unknown_platform', () => call('saveSiteSettings',
+    { social: { myspace: 'https://myspace.com/x' } }, administrator.token));
+  throwsWith('bad_email', () => call('saveSiteSettings',
+    { social: { email: 'not an address' } }, administrator.token));
+});
+
+test('the platforms people actually use are accepted', () => {
+  call('saveSiteSettings', { social: {
+    linkedin: 'https://www.linkedin.com/company/sustech360',
+    x: 'https://twitter.com/sustech360',
+    youtube: 'https://youtu.be/abc',
+    whatsapp: 'https://wa.me/919000000000',
+    email: 'editor@sustech360.com',
+    rss: 'rss/feed.xml'
+  }}, administrator.token);
+  const cfg = call('siteConfiguration', {}, administrator.token);
+  assert(cfg.settings.social.linkedin, 'the link was not stored');
+  assert(cfg.settings.social.email === 'editor@sustech360.com', 'mailto: should not be required');
+});
+
+test('a blank value is how a link is removed', () => {
+  call('saveSiteSettings', { social: { whatsapp: '' } }, administrator.token);
+  const cfg = call('siteConfiguration', {}, administrator.token);
+  assert(!cfg.settings.social.whatsapp, 'blanking did not remove it');
+  assert(cfg.settings.social.linkedin, 'blanking one removed the others');
+});
+
 test('a save that changes nothing is refused rather than silently succeeding', () => {
   throwsWith('nothing_to_save', () => call('saveSiteSettings', {}, administrator.token));
 });
@@ -299,6 +331,21 @@ test('adopting the live version brings the database back into line', () => {
   const hydrogen = cfg.menus.filter(m => m.name === 'Hydrogen')[0];
   assert(!hydrogen || hydrogen.status === 'DISABLED', 'adopt left the later item active');
   assert(call('previewConfiguration', {}, administrator.token).pending === 0, 'adopt should close the gap');
+});
+
+test('adopting an old version undoes settings added after it', () => {
+  // A social link added after version 1 did not exist in version 1, so adopting
+  // that version has to clear it — otherwise "adopt" does not mean what it says.
+  const cfg = call('siteConfiguration', {}, administrator.token);
+  assert(!cfg.settings.social || !cfg.settings.social.linkedin,
+    'a setting added after the adopted version survived it');
+});
+
+test('adoption leaves editorial and system settings alone', () => {
+  // Word limits, counters and stored documents are not part of a configuration
+  // version. Rolling the site back must not touch them.
+  const words = Db.findOne('Settings', { key: 'formats.research-highlight.words' });
+  assert(words && String(words.value).trim(), 'an editorial setting was wiped by adopt');
 });
 
 test('rollback and adoption are both audited', () => {

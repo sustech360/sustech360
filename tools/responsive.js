@@ -65,15 +65,24 @@ check('nothing is pinned to a width a phone does not have', () => {
   const bad = [];
   Object.keys(css).forEach(f => {
     // A media query condition reads as "min-width: 960px" too, and that is the
-    // opposite of a problem — it is the rule that adapts. Only declarations
-    // inside a block count.
+    // opposite of a problem — it is the rule that adapts.
     const declarations = css[f].replace(/@media[^{]*{/g, '{');
-    const m = declarations.match(/(?:^|[^-])(?:min-)?width:\s*(\d{3,})px/g) || [];
-    m.forEach(rule => {
-      const px = Number(rule.match(/(\d{3,})px/)[1]);
-      // 320px is the narrowest phone still in use. Anything wider than that as
-      // a hard width is something a small screen cannot show.
-      if (px > 320 && !/max-width/.test(rule)) bad.push(f + ' has ' + rule.trim());
+
+    // Walk rule by rule so the selector is known. A decorative ::before inside
+    // an overflow-hidden panel can be any size it likes; it is an ornament, not
+    // a column, and it cannot push a page sideways.
+    const rules = declarations.match(/[^{}]+\{[^{}]*\}/g) || [];
+    rules.forEach(rule => {
+      const selector = rule.slice(0, rule.indexOf('{'));
+      const body = rule.slice(rule.indexOf('{'));
+      if (/::(before|after)/.test(selector)) return;
+      (body.match(/(?:^|[^-])(?:min-)?width:\s*(\d{3,})px/g) || []).forEach(decl => {
+        const px = Number(decl.match(/(\d{3,})px/)[1]);
+        // 320px is the narrowest phone still in use.
+        if (px > 320 && !/max-width/.test(decl)) {
+          bad.push(f + ':' + selector.trim().slice(0, 40) + ' has ' + decl.trim());
+        }
+      });
     });
   });
   return bad;
@@ -96,7 +105,13 @@ check('long words and URLs cannot widen the page', () =>
 check('the navigation strips scroll rather than stacking', () => {
   const bad = [];
   if (!/\.nav ul[\s\S]{0,200}overflow-x:\s*auto/.test(css['assets/css/main.css'])) bad.push('public section nav');
-  if (!/\.rail nav[\s\S]{0,300}overflow-x:\s*auto/.test(css['admin/admin.css'])) bad.push('control centre rail');
+  // Two acceptable answers for a long menu on a narrow screen: a strip that
+  // scrolls sideways, or a drawer that slides in over the page. The control
+  // centre uses the drawer, which is the better fit for twenty-two screens.
+  const admin = css['admin/admin.css'];
+  const drawer = /transform:\s*translateX\(-100%\)/.test(admin) && /\.nav-open/.test(admin);
+  const strip = /nav[\s\S]{0,300}overflow-x:\s*auto/.test(admin);
+  if (!drawer && !strip) bad.push('control centre navigation');
   if (!/\.tabs[\s\S]{0,300}overflow-x:\s*auto/.test(css['author/author.css'])) bad.push('author portal tabs');
   return bad;
 });
@@ -132,8 +147,10 @@ check('tap targets reach 44px where the pointer is a finger', () => {
 check('form fields are 16px on touch, so iOS does not zoom', () => {
   const bad = [];
   ['admin/admin.css', 'author/author.css', 'assets/css/main.css'].forEach(f => {
-    const coarse = (css[f].match(/@media \(pointer: coarse\)[\s\S]*?\n}/) || [''])[0];
-    if (!/font-size:\s*16px/.test(coarse)) bad.push(f);
+    // A stylesheet may have several coarse-pointer blocks; the rule only has to
+    // be in one of them. Reading just the first was a bug in this check.
+    const blocks = css[f].match(/@media \(pointer: coarse\)[\s\S]*?\n}/g) || [];
+    if (!blocks.some(b => /font-size:\s*16px/.test(b))) bad.push(f);
   });
   return bad;
 });

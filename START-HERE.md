@@ -28,7 +28,7 @@ read the runbook first — it is the one that stops you getting the order wrong.
 Four things, in this order. None needs a developer.
 
 1. **A Google spreadsheet and a Drive folder** — where everything is stored.
-2. **A Google Apps Script project** — the engine. You paste in 30 files, add nine
+2. **A Google Apps Script project** — the engine. You paste in 31 files, add nine
    settings, press Run once, and deploy it.
 3. **A GitHub repository** — the website itself. You upload this folder and turn
    on GitHub Pages.

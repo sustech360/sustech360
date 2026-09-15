@@ -188,7 +188,10 @@ check('no secret is committed', () => {
     const src = read(f);
     if (/ghp_[A-Za-z0-9]{20,}/.test(src)) found.push(f + ' contains what looks like a GitHub token');
     if (/AIza[0-9A-Za-z_-]{30,}/.test(src)) found.push(f + ' contains what looks like a Google API key');
-    if (/PASSWORD_PEPPER\s*[:=]\s*['"][^'"]{8,}/.test(src) && !/CFG\.get/.test(src)) {
+    // A placeholder someone is meant to replace is not a secret. Anything that
+    // still says PASTE_ or is plainly empty is a blank to fill in.
+    const peppered = src.match(/PASSWORD_PEPPER\s*[:=]\s*['"]([^'"]{8,})/);
+    if (peppered && !/CFG\.get/.test(src) && !/^PASTE_/.test(peppered[1])) {
       found.push(f + ' looks like it hard-codes a pepper');
     }
   });
@@ -259,6 +262,62 @@ check('nothing takes the script lock twice in one execution', () => {
     }
   });
   return [...new Set(found)];
+});
+
+check('the service worker leaves the staff tools alone', () => {
+  // Caching /admin/ or /author/ means a changed file appears not to change,
+  // which is indistinguishable from the change never having been made.
+  const sw = read('pwa/service-worker.js');
+  return /\(admin\|author\)/.test(sw) ? [] : ['the service worker may cache the control centre'];
+});
+
+console.log('\nstaying signed in');
+
+check('a session survives a refresh and a new tab', () => {
+  const found = [];
+  [['admin/admin.js', 's360.session'], ['author/author.js', 's360.author']].forEach(pair => {
+    const src = read(pair[0]);
+    if (src.indexOf('localStorage') === -1) found.push(pair[0] + ' keeps the session per tab only');
+    if (src.indexOf(pair[1]) === -1) found.push(pair[0] + ' has no session key');
+  });
+  return found;
+});
+
+check('a failed request does not sign anyone out', () => {
+  // The old build cleared the token on any error, so one cold start or one
+  // tunnel meant signing in again and losing the work in progress.
+  const found = [];
+  ['admin/admin.js', 'author/author.js'].forEach(f => {
+    const src = read(f);
+    if (!/code === 'unauthenticated'/.test(src)) {
+      found.push(f + ' does not distinguish a dead session from a dead connection');
+    }
+  });
+  return found;
+});
+
+check('the idle window is three hours and slides', () => {
+  const found = [];
+  ['admin/admin.js', 'author/author.js'].forEach(f => {
+    const src = read(f);
+    if (!/3 \* 60 \* 60 \* 1000/.test(src)) found.push(f + ' has no three-hour window');
+    if (!/touchToken/.test(src)) found.push(f + ' never extends the window on activity');
+  });
+  return found;
+});
+
+check('the code box appears only when it is needed', () => {
+  // A field most people must ignore is a field that makes them hesitate at the
+  // one screen where hesitation matters.
+  const html = read('admin/index.html');
+  const js = read('admin/admin.js');
+  const found = [];
+  if (!/id="mfarow" class="hidden"/.test(html)) found.push('the code box is not hidden by default');
+  if (!/mfa_required[\s\S]{0,200}classList\.remove\('hidden'\)/.test(js)) {
+    found.push('nothing reveals it when the engine asks for a code');
+  }
+  if (!/beginMfa|enableMfa/.test(js)) found.push('there is no way to turn two-factor on');
+  return found;
 });
 
 console.log('\npages');

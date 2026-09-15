@@ -64,8 +64,120 @@ test('a setting typed in the wrong case is named, not silently ignored', () => {
   const wrong = build({ ENV: 'test', spreadsheet_id: 'x', DRIVE_FOLDER_ID: 'y' });
   let message = '';
   try { wrong.setup(); } catch (e) { message = e.message; }
-  assert(/WRONG CASE/.test(message) && /spreadsheet_id/.test(message),
+  assert(/NEARLY RIGHT/.test(message) && /spreadsheet_id/.test(message),
     'a lower-case property name is invisible to the engine and must be called out');
+});
+
+test('the publishing check names the missing piece rather than a code', () => {
+  const noToken = build({ ENV: 'test', GITHUB_REPO: 'owner/repo' });
+  const report = noToken.checkPublishing();
+  assert(/MISSING  GITHUB_TOKEN/.test(report), 'a missing token is not called out:\n' + report);
+  assert(/Save script properties/.test(report), 'it does not say where it goes');
+
+  const badRepo = build({ ENV: 'test', GITHUB_REPO: 'https://github.com/o/r', GITHUB_TOKEN: 'x'.repeat(40) });
+  const second = badRepo.checkPublishing();
+  assert(/WRONG    GITHUB_REPO/.test(second), 'a full URL in GITHUB_REPO is not caught:\n' + second);
+});
+
+test('the publishing settings helper leaves the other settings alone', () => {
+  const box = build({ ENV: 'test', SPREADSHEET_ID: 'sheet', PASSWORD_PEPPER: 'p' });
+  let refused = '';
+  try { box.setPublishingSettings(); } catch (e) { refused = e.message; }
+  assert(/Put your token in first/.test(refused), 'it should refuse the placeholder token');
+  // Writing the two must not wipe what is already there — setProperties can.
+  box.PropertiesService.getScriptProperties().setProperties(
+    { GITHUB_REPO: 'o/r', GITHUB_TOKEN: 'x'.repeat(40) }, false);
+  const after = box.PropertiesService.getScriptProperties().getProperties();
+  assert(after.SPREADSHEET_ID === 'sheet', 'an earlier property was lost');
+  assert(after.GITHUB_REPO === 'o/r');
+});
+
+test('the publishing check writes a test file and removes it', () => {
+  const ok = build({ ENV: 'test', GITHUB_REPO: 'owner/repo', GITHUB_TOKEN: 'x'.repeat(40) });
+  const report = ok.checkPublishing();
+  assert(/Publishing works/.test(report), 'a working connection was not confirmed:\n' + report);
+  assert(!ok.repo.has('data/.publish-check.json'), 'the test file was left behind');
+});
+
+test('the report says saving works when some properties did save', () => {
+  // The case that actually happened: ENV saved, the other six did not. That
+  // combination rules out the usual explanations — wrong project, wrong
+  // account, a Save button that does nothing — and the report should say so
+  // rather than repeating advice the person has already followed.
+  const partial = build({ ENV: 'test' });
+  const report = partial.checkSetup();
+  assert(/Saving does work in this project/.test(report),
+    'the report does not use the most useful clue it has:\n' + report);
+  assert(/setPropertiesOnce/.test(report), 'it does not offer the way round the screen');
+});
+
+test('a name with a stray space is reported as nearly right, not missing', () => {
+  const spaced = build({ 'SPREADSHEET_ID ': 'abc', ENV: 'test' });
+  const report = spaced.checkSetup();
+  assert(/Nearly right/.test(report), 'a stray space was reported as simply missing:\n' + report);
+  assert(/\[SPREADSHEET_ID \]/.test(report), 'the space is not made visible');
+});
+
+test('the diagnostic names a property typed with a stray space', () => {
+  // A space pasted from a document is invisible on the settings screen and
+  // makes the property a different one entirely. This is the check that finds it.
+  const odd = build({ 'SPREADSHEET_ID ': 'abc', ENV: 'test' });
+  const report = odd.whatCanISee();
+  assert(/\[SPREADSHEET_ID \]/.test(report), 'the stray space is not visible in the report');
+  assert(/MISSING SPREADSHEET_ID/.test(report), 'it should still report the real one as missing');
+  assert(/Spaces and case matter/.test(report), 'it does not explain what happened');
+});
+
+test('settings can be written from code when the screen will not hold them', () => {
+  const blank = build({ ENV: 'test' });
+  let refused = '';
+  try { blank.setPropertiesOnce(); } catch (e) { refused = e.message; }
+  assert(/Fill these in first/.test(refused), 'it should refuse to write the placeholder values');
+});
+
+test('two-factor is enrolled by the person who will use it', () => {
+  const supervisorSession = call('login', { email: 'supervisor@example.test', password: tempPassword });
+  const start = call('beginMfa', {}, supervisorSession.token);
+  assert(/^[A-Z2-7]{32}$/.test(start.secret), 'the secret is not valid base32: ' + start.secret);
+  assert(/^otpauth:\/\/totp\//.test(start.otpauth), 'no link an authenticator app can read');
+  assert(start.otpauth.indexOf(start.secret) !== -1, 'the link does not carry the secret');
+
+  // Nothing is in force until a code proves the app and the secret agree.
+  assert(call('mfaState', {}, supervisorSession.token).enabled === false,
+    'starting the setup should not enable it');
+  throwsWith('bad_code', () => call('enableMfa', { code: '000000' }, supervisorSession.token));
+
+  const code = sandbox.internals.Auth.totpAt(
+    sandbox.internals.Auth.base32Decode(start.secret), Math.floor(Date.now() / 30000));
+  assert(call('enableMfa', { code: code }, supervisorSession.token).enabled === true, 'a valid code did not enable it');
+  assert(call('mfaState', {}, supervisorSession.token).enabled === true);
+});
+
+test('once enabled, a password alone is not enough', () => {
+  throwsWith('mfa_required', () => call('login', { email: 'supervisor@example.test', password: tempPassword }));
+  const user = sandbox.internals.Db.findOne('Users', { email: 'supervisor@example.test' });
+  const code = sandbox.internals.Auth.totpAt(
+    sandbox.internals.Auth.base32Decode(user.mfa_secret), Math.floor(Date.now() / 30000));
+  const ok = call('login', { email: 'supervisor@example.test', password: tempPassword, mfa_code: code });
+  assert(ok.token, 'a correct code did not let the supervisor in');
+});
+
+test('a wrong password fails the same way whether or not two-factor is on', () => {
+  // The error must not become an oracle for who has two-factor enabled.
+  throwsWith('invalid_credentials', () => call('login',
+    { email: 'supervisor@example.test', password: 'wrong', mfa_code: '123456' }));
+});
+
+test('turning it off needs a current code as well', () => {
+  const user = sandbox.internals.Db.findOne('Users', { email: 'supervisor@example.test' });
+  const code = sandbox.internals.Auth.totpAt(
+    sandbox.internals.Auth.base32Decode(user.mfa_secret), Math.floor(Date.now() / 30000));
+  const session = call('login', { email: 'supervisor@example.test', password: tempPassword, mfa_code: code });
+  throwsWith('bad_code', () => call('disableMfa', { code: '000000' }, session.token));
+  assert(call('disableMfa', { code: code }, session.token).enabled === false, 'a valid code did not turn it off');
+  assert(!sandbox.internals.Db.findOne('Users', { email: 'supervisor@example.test' }).mfa_secret,
+    'the secret should be discarded when two-factor is turned off');
+  assert(sandbox.internals.Db.all('AuditLogs').some(l => l.action === 'MFA_ENABLED'), 'enabling was not audited');
 });
 
 test('every declared table exists', () => {

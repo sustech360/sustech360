@@ -121,11 +121,31 @@ function build(props) {
   const UrlFetchApp = {
     fetch: (url, opts) => {
       opts = opts || {};
-      const path = decodeURIComponent(String(url).split('/contents/')[1] || '');
-      if ((opts.method || 'get').toLowerCase() === 'put') {
+      const method = (opts.method || 'get').toLowerCase();
+      const full = String(url);
+
+      // A repository lookup — what the publishing check asks first.
+      const repoOnly = full.match(/^https:\/\/api\.github\.com\/repos\/([\w.-]+\/[\w.-]+)$/);
+      if (repoOnly) {
+        return {
+          getResponseCode: () => 200,
+          getContentText: () => JSON.stringify({ full_name: repoOnly[1], default_branch: 'main' })
+        };
+      }
+
+      const path = decodeURIComponent(full.split('/contents/')[1] || '');
+
+      if (method === 'put') {
         const body = JSON.parse(opts.payload);
         repo.set(path, Buffer.from(body.content, 'base64').toString('utf8'));
-        return { getResponseCode: () => (body.sha ? 200 : 201), getContentText: () => '{}' };
+        return {
+          getResponseCode: () => (body.sha ? 200 : 201),
+          getContentText: () => JSON.stringify({ content: { sha: 'sha-' + path.length } })
+        };
+      }
+      if (method === 'delete') {
+        repo.delete(path);
+        return { getResponseCode: () => 200, getContentText: () => '{}' };
       }
       if (!repo.has(path)) return { getResponseCode: () => 404, getContentText: () => '{}' };
       return {
@@ -143,7 +163,8 @@ function build(props) {
       getScriptProperties: () => ({
         getProperty: k => (k in props ? props[k] : null),
         getProperties: () => Object.assign({}, props),
-        setProperty: (k, v) => { props[k] = String(v); }
+        setProperty: (k, v) => { props[k] = String(v); },
+        setProperties: (obj) => { Object.keys(obj).forEach(k => { props[k] = String(obj[k]); }); }
       })
     },
     // A pessimistic script lock: Apps Script has exactly one, and taking it
