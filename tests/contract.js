@@ -228,6 +228,33 @@ test('no section announces itself and then apologises', async () => {
   });
 });
 
+test('every headline carries the section it belongs to', async () => {
+  const badges = home.document.querySelectorAll('.badge');
+  assert(badges.length > 0, 'no section badges on the front page');
+  const linked = Array.from(badges).filter(b => b.tagName === 'A' && b.getAttribute('href'));
+  assert(linked.length > 0, 'the badges do not lead into their sections');
+});
+
+test('each headline says who wrote it and how long it takes', async () => {
+  // On a site with one article the lead block takes it and there are no cards,
+  // so the strip is checked wherever it appears.
+  const strip = home.document.querySelector('.byline');
+  assert(strip, 'no byline strip anywhere on the front page');
+  assert(/min/.test(strip.textContent), 'the strip carries no reading time: ' + strip.textContent);
+  assert(strip.querySelector('.byline__by'), 'the strip does not name the author');
+});
+
+test('the article page uses the same vocabulary as the front page', async () => {
+  const article = await render('article.html', '?a=' + published.slug);
+  assert(article.document.querySelector('.article__head .badge'), 'the article has no section badge');
+  assert(article.document.querySelector('.article__head .byline'), 'the article has no byline strip');
+});
+
+test('the masthead stays put while you read', async () => {
+  const css = fs.readFileSync(path.join(ROOT, 'assets/css/main.css'), 'utf8');
+  assert(/\.nav\s*{[^}]*position:\s*sticky/.test(css), 'the section bar does not stick');
+});
+
 test('the lead story says what it is and links to its section', async () => {
   const kicker = home.document.querySelector('.lead .kicker');
   assert(kicker && kicker.getAttribute('href'), 'the lead has no section label');

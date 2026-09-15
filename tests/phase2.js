@@ -358,6 +358,37 @@ test('draft bodies are written to Drive, not to a cell', () => {
   assert(v.payload_ref && sandbox.files.has(v.payload_ref), 'no Drive payload for the working version');
 });
 
+test('a changeset is merged field by field, not pasted over the whole draft', () => {
+  // Two windows, two sections. The second must not wipe the first.
+  call('syncDraft', { article_id: draft.id, changes: { fields: { background: 'From the first window. ' } } }, author.token);
+  const res = call('syncDraft', { article_id: draft.id, changes: { fields: { findings: 'From the second window. ' } } }, author.token);
+  assert(res.ok && res.saved_at, 'the sync did not report a save');
+  const held = call('getArticle', { article_id: draft.id }, author.token).content.fields;
+  assert(/first window/.test(held.background), 'the first window\'s section was lost');
+  assert(/second window/.test(held.findings), 'the second window\'s section was lost');
+});
+
+test('a sync that arrives behind says so, and keeps both', () => {
+  const stale = 'not-the-current-timestamp';
+  const res = call('syncDraft', {
+    article_id: draft.id, base: stale,
+    changes: { fields: { significance: 'Written while something else was saving. ' } }
+  }, author.token);
+  assert(res.merged_with_other_changes === true, 'a stale sync was not reported as merged');
+  assert(res.fields && res.fields.background, 'the answer does not carry what the server holds');
+  assert(/Written while/.test(res.fields.significance), 'the late change was dropped');
+});
+
+test('a sync with nothing in it costs nothing', () => {
+  const res = call('syncDraft', { article_id: draft.id, changes: {} }, author.token);
+  assert(res.unchanged === true, 'an empty changeset was treated as a save');
+});
+
+test('a made-up field name is refused', () => {
+  throwsWith('bad_field', () => call('syncDraft',
+    { article_id: draft.id, changes: { fields: { 'Drop Table': 'x' } } }, author.token));
+});
+
 test('an incomplete submission is refused with reasons', () => {
   const e = throwsWith('incomplete', () => call('submitArticle', { article_id: draft.id, checklist: {} }, author.token));
   assert(/required/i.test(e.detail), 'the author is not told what is missing: ' + e.detail);
@@ -436,6 +467,11 @@ test('another author cannot save over the draft', () => {
 
 test('another author cannot submit it', () => {
   throwsWith('not_found', () => call('submitArticle', { article_id: draft.id, checklist: allChecked() }, other.token));
+});
+
+test('another author cannot sync into this draft', () => {
+  throwsWith('not_found', () => call('syncDraft',
+    { article_id: draft.id, changes: { fields: { background: 'mine now' } } }, other.token));
 });
 
 test('myArticles shows only your own work', () => {

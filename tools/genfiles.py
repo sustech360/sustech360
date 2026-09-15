@@ -122,6 +122,8 @@ DESC = {
  'tests/phase9.js': ('9', 'Performance measurement. 19 checks.'),
  'tests/phase10.js': ('10', 'Billing and backup. 35 checks.'),
  'tests/contract.js': ('—', 'Publishes for real, then renders it with the real frontend. 22 checks.'),
+ 'tests/studio.js': ('—', 'Does the studio answer quickly? Seven checks, in a browser.'),
+ 'tests/editor.js': ('—', 'Does the editor lose work? Seven checks, including offline.'),
 
  # ---- project ----
  'README.md': ('—', 'What this is and how to run the tests.'),
@@ -138,6 +140,10 @@ DESC = {
  'tools/smoke.js': ('—', 'Opens every page as a browser would, including its empty states.'),
  'tools/verify.js': ('—', 'One command that runs every check, backend and frontend.'),
  'tools/responsive.js': ('—', 'Twelve layout checks: widths, scrolling, tap targets, safe areas.'),
+ 'tools/bench.js': ('—', 'Counts Google operations for the paths that run most often.'),
+ 'tools/studio-bench.js': ('—', 'Opens every studio screen and counts what each costs.'),
+ 'apps-script/Telemetry.gs': ('—', 'One beacon per visit, buffered in cache, flushed in batches.'),
+ 'docs/PERFORMANCE-PLAN.md': ('—', 'What was measured, what changed, and what is left.'),
  'docs/DEVICE-TESTING.md': ('—', 'What was fixed for phones and tablets, and the hour that needs a real device.'),
  'docs/ADSENSE.md': ('—', 'Google AdSense: what is wired, what Google asks for, realistic expectations.'),
  'ads.txt': ('—', 'Who may sell advertising here. Put your publisher id in it.'),

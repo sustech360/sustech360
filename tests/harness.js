@@ -182,7 +182,13 @@ function build(props) {
     },
     // Utilities.newBlob(html, 'text/html').getAs('application/pdf') is how Apps
     // Script makes a PDF. The stub keeps the bytes so a test can look inside.
-    CacheService: { getScriptCache: () => ({ get: k => (cache.has(k) ? cache.get(k) : null), put: (k, v) => cache.set(k, v) }) },
+    CacheService: {
+      getScriptCache: () => ({
+        get: k => (cache.has(k) ? cache.get(k) : null),
+        put: (k, v) => cache.set(k, v),
+        remove: k => cache.delete(k)
+      })
+    },
     DriveApp: {
       getFolderById: () => folder('root'),
       getFileById: id => { if (!files.has(id)) throw new Error('no file'); return fileHandle(id); },
@@ -229,7 +235,7 @@ function build(props) {
   // sandbox. Publish the modules it needs to inspect.
   vm.runInContext(
     'globalThis.internals = { Db, SCHEMA, LIMITS, Auth, Perms, Articles, Invitations, Users, Roles, '
-    + 'Billing, Performance, Issues, Social, Ads, Newsletter, Guidelines, Formats, SiteConfig, '
+    + 'Billing, Performance, Issues, Social, Ads, Newsletter, Guidelines, Formats, SiteConfig, Telemetry, '
     + 'ACTIONS, PUBLIC_ACTIONS };',
     sandbox);
   return sandbox;

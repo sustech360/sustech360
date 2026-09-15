@@ -69,6 +69,8 @@ console.log('\nfrontend');
 run('contract with the engine', 'tests/contract.js');
 run('every page opens', 'tools/smoke.js');
 run('layout on every screen size', 'tools/responsive.js');
+run('the studio answers quickly', 'tests/studio.js');
+run('the editor never loses work', 'tests/editor.js');
 
 const failed = results.filter(r => !r.ok);
 console.log('\n' + '─'.repeat(64));

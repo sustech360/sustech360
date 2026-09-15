@@ -421,6 +421,63 @@ test('an expired grant stops working without any cleanup job', () => {
 
 /* ------------------------------------------------------------- standing -- */
 
+console.log('\nseveral calls, one execution');
+
+test('a batch returns an answer for each call, in order', () => {
+  const res = call('batch', { calls: [
+    { action: 'me' },
+    { action: 'listRoles' },
+    { action: 'siteConfiguration' }
+  ]}, supervisor.token);
+  assert(res.results.length === 3, 'got ' + res.results.length + ' results');
+  assert(res.results[0].data.user.email === 'supervisor@example.test');
+  assert(Array.isArray(res.results[1].data), 'the second answer is not the roles');
+  assert(res.results[2].data.menus, 'the third answer is not the configuration');
+});
+
+test('one refusal does not discard the answers beside it', () => {
+  const res = call('batch', { calls: [
+    { action: 'me' },
+    { action: 'publishConfiguration' },
+    { action: 'listRoles' }
+  ]}, administrator.token);
+  assert(res.results[0].ok === true, 'the first call should have succeeded');
+  assert(res.results[1].ok === false && res.results[1].error === 'forbidden',
+    'the refusal is not reported: ' + JSON.stringify(res.results[1]));
+  assert(res.results[2].ok === true, 'the third call was discarded by the second failing');
+});
+
+test('batching changes how requests travel, never who may do what', () => {
+  const res = call('batch', { calls: [{ action: 'publishConfiguration' }] }, administrator.token);
+  assert(res.results[0].ok === false && res.results[0].error === 'forbidden',
+    'a batch let an administrator publish');
+});
+
+test('signing in cannot be batched', () => {
+  // A dozen password attempts sharing one execution would make the lockout,
+  // which counts attempts per account, cheaper to grind against.
+  const res = call('batch', { calls: [
+    { action: 'login', payload: { email: 'supervisor@example.test', password: 'guess' } }
+  ]}, supervisor.token);
+  assert(res.results[0].error === 'not_batchable', JSON.stringify(res.results[0]));
+});
+
+test('a batch cannot contain a batch', () => {
+  const res = call('batch', { calls: [{ action: 'batch', payload: { calls: [] } }] }, supervisor.token);
+  assert(res.results[0].error === 'not_batchable', 'nesting was allowed');
+});
+
+test('an empty or oversized batch is refused', () => {
+  throwsWith('empty_batch', () => call('batch', { calls: [] }, supervisor.token));
+  const many = [];
+  for (let i = 0; i < 20; i++) many.push({ action: 'me' });
+  throwsWith('batch_too_large', () => call('batch', { calls: many }, supervisor.token));
+});
+
+test('a batch needs a session like anything else', () => {
+  throwsWith('unauthenticated', () => call('batch', { calls: [{ action: 'me' }] }));
+});
+
 console.log('\nstanding invariants');
 
 test('the supervisor invariants survive phase 5', () => {

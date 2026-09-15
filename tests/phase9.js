@@ -138,6 +138,62 @@ test('anyone who can sign in can read the report', () => {
   assert(call('performanceReport', {}, reviewer.token).metrics.length > 0);
 });
 
+/* ------------------------------------------------------------- telemetry -- */
+
+console.log('\nthe cost of a reader');
+
+test('one visit sends one beacon carrying both kinds of count', () => {
+  const res = call('recordTelemetry', {
+    vitals: [{ m: 'LCP', v: 1700, p: 'article', d: 'mobile' }],
+    ads: [{ id: 'CRE-EXAMPLE1', i: 1, c: 0 }]
+  });
+  assert(res.counted === 2, 'both halves of the beacon should count: ' + res.counted);
+});
+
+test('a visit writes nothing to the spreadsheet', () => {
+  // This is the whole point. Counting readers must not cost a row per reader.
+  const before = Db.all('Vitals').length;
+  for (let i = 0; i < 25; i++) {
+    call('recordTelemetry', { vitals: [{ m: 'FCP', v: 800 + i, p: 'home', d: 'desktop' }] });
+  }
+  assert(Db.all('Vitals').length === before, 'twenty-five visits wrote rows immediately');
+  assert(sandbox.internals.Telemetry.pending() > 0, 'nothing is buffered, so nothing was counted');
+});
+
+test('the flush folds them in, and the numbers survive the round trip', () => {
+  sandbox.flushTelemetry();
+  const row = Db.findOne('Vitals', { metric: 'FCP', page: 'home', device: 'desktop' });
+  assert(row && Number(row.count) >= 25, 'the buffered samples did not reach the sheet: ' + (row && row.count));
+  assert(sandbox.internals.Telemetry.pending() === 0, 'the buffer was not cleared');
+  const report = call('performanceReport', {}, administrator.token);
+  const fcp = report.metrics.filter(m => m.metric === 'FCP' && m.page === 'home')[0];
+  assert(fcp && fcp.samples >= 25, 'the report does not see them');
+});
+
+test('the report admits what has not been written yet', () => {
+  call('recordTelemetry', { vitals: [{ m: 'LCP', v: 2400, p: 'home', d: 'mobile' }] });
+  const report = call('performanceReport', {}, administrator.token);
+  assert(report.awaiting_flush > 0, 'a report that hides its own lag is a report nobody can reconcile');
+  sandbox.flushTelemetry();
+});
+
+test('the beacon still refuses what it refused before', () => {
+  const before = sandbox.internals.Telemetry.pending();
+  call('recordTelemetry', { vitals: [{ m: 'INVENTED', v: 10, p: 'home', d: 'mobile' }] });
+  call('recordTelemetry', { ads: [{ id: 'not-a-creative', i: 99999, c: 99999 }] });
+  assert(sandbox.internals.Telemetry.pending() === before, 'rubbish was buffered');
+  const flood = [];
+  for (let i = 0; i < 60; i++) flood.push({ m: 'LCP', v: 1000, p: 'home', d: 'mobile' });
+  assert(call('recordTelemetry', { vitals: flood }).counted === 0, 'an oversized batch was accepted');
+});
+
+test('a creative that does not exist is never invented at flush time', () => {
+  call('recordTelemetry', { ads: [{ id: 'CRE-GHOSTGHOST', i: 3, c: 1 }] });
+  sandbox.flushTelemetry();
+  assert(!Db.findOne('AdEvents', { creative_id: 'CRE-GHOSTGHOST' }),
+    'the flush created a row for a creative that was never approved');
+});
+
 /* ---------------------------------------------------------------- budget -- */
 
 console.log('\npayload budget');
