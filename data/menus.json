@@ -48,59 +48,15 @@
       "parent": null,
       "order": 4,
       "status": "ACTIVE"
-    },
-    {
-      "id": "m-pol",
-      "name": "Policy",
-      "url": "category.html?c=policy",
-      "parent": null,
-      "order": 5,
-      "status": "PAUSED"
-    },
-    {
-      "id": "m-about",
-      "name": "About",
-      "url": "about.html",
-      "parent": null,
-      "order": 6,
-      "status": "ACTIVE"
-    },
-    {
-      "id": "m-issues",
-      "name": "Issues",
-      "url": "issues.html",
-      "parent": null,
-      "order": 7,
-      "status": "ACTIVE"
     }
   ],
   "footer": [
     {
-      "id": "f-guide",
-      "name": "Author guidelines",
-      "url": "guidelines.html",
-      "order": 1,
-      "status": "ACTIVE"
-    },
-    {
-      "id": "f-policy",
-      "name": "Editorial policy",
-      "url": "guidelines.html#g-review",
-      "order": 2,
-      "status": "ACTIVE"
-    },
-    {
       "id": "f-privacy",
       "name": "Privacy",
       "url": "privacy.html",
+      "parent": null,
       "order": 3,
-      "status": "ACTIVE"
-    },
-    {
-      "id": "f-rss",
-      "name": "RSS",
-      "url": "rss/feed.xml",
-      "order": 4,
       "status": "ACTIVE"
     }
   ]
