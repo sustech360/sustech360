@@ -13,9 +13,11 @@
     var api = ctx.api, esc = ctx.esc, message = ctx.message, explain = ctx.explain;
     var views = previous ? previous(ctx) : {};
 
-    function isSupervisor() {
+    /** Who may correct a live page is a permission now, not a role. */
+    function mayCorrect() {
       var me = ctx.me();
-      return me && me.user.role_id === 'SUPERVISOR_ADMIN';
+      if (!me) return false;
+      return (me.permissions || []).some(function (p) { return p.permission === 'CORRECT_PUBLISHED'; });
     }
 
     views.published = function (v) {
@@ -26,7 +28,7 @@
         }
         v.innerHTML =
           '<div class="card"><p class="hint">' + rows.length + ' pages are live. ' +
-          (isSupervisor()
+          (mayCorrect()
             ? 'You can correct how each is filed and described. Changing the text itself is a revision, which starts in the queue.'
             : 'Corrections to a live page are the supervisor admin’s step. Ask them, or open a revision from the queue.') +
           '</p></div>' +
@@ -43,7 +45,7 @@
               (a.working_version > a.public_version ? '<span class="hint">v' + a.working_version + ' in progress</span>' : '') + '</td>' +
               '<td class="hint">' + esc(String(a.published_at).slice(0, 10)) + '</td>' +
               '<td><a class="ghost" href="' + esc(a.url) + '" target="_blank" rel="noopener">View</a> ' +
-              (isSupervisor() ? '<button class="ghost" data-fix="' + esc(a.id) + '">Correct</button>' : '') +
+              (mayCorrect() ? '<button class="ghost" data-fix="' + esc(a.id) + '">Correct</button>' : '') +
               '</td></tr>';
           }).join('') + '</tbody></table></div>';
 
@@ -94,6 +96,15 @@
           '<label><input type="checkbox" id="c-sponsored"' + (a.sponsored ? ' checked' : '') + '> ' +
           'Labelled as sponsored</label>' +
 
+          '<h3>The text</h3>' +
+          '<p class="hint">Correcting the words publishes a new version. The one that is live now is kept ' +
+          'exactly as it is — somebody may have cited it — and the page will say it was corrected.</p>' +
+          (a.fields || []).map(function (f) {
+            return '<label for="pf-' + esc(f.field) + '">' + esc(f.label || f.field) + '</label>' +
+              '<textarea id="pf-' + esc(f.field) + '" data-field="' + esc(f.field) + '" rows="10">' +
+              esc(f.value || '') + '</textarea>';
+          }).join('') +
+
           '<label for="c-reason">What is being corrected <span class="hint">goes on the record</span></label>' +
           '<input id="c-reason" placeholder="Filed in the wrong section">' +
 
@@ -104,6 +115,10 @@
           'open a revision from the queue and let an editor read it.</p>' +
           '<div id="cmsg"></div></div>';
 
+        // Remember what arrived, so only what an editor actually changed is sent.
+        v.querySelectorAll('textarea[data-field]').forEach(function (box) { box.dataset.was = box.value; });
+        if (window.MarksUI) MarksUI.attach(v, { onChange: function () {} });
+
         document.getElementById('c-back').addEventListener('click', function () { ctx.render('published'); });
 
         document.getElementById('c-save').addEventListener('click', function () {
@@ -111,8 +126,13 @@
             return document.getElementById(id).value.split(',')
               .map(function (x) { return x.trim(); }).filter(Boolean);
           };
+          var fields = {};
+          v.querySelectorAll('textarea[data-field]').forEach(function (box) {
+            if (box.value !== (box.dataset.was || '')) fields[box.getAttribute('data-field')] = box.value;
+          });
           api.call('correctLiveArticle', {
             article_id: a.id,
+            fields: fields,
             title: document.getElementById('c-title').value,
             category: document.getElementById('c-category').value,
             level: document.getElementById('c-level').value,
@@ -124,7 +144,9 @@
             reason: document.getElementById('c-reason').value
           }).then(function (res) {
             message(document.getElementById('cmsg'),
-              'Corrected and republished — ' + res.files + ' files updated.', 'ok');
+              res.text_changed
+                ? 'Corrected and republished as version ' + res.version + '. The previous version is kept.'
+                : 'Corrected and republished — ' + res.files + ' files updated.', 'ok');
           }).catch(function (e) {
             message(document.getElementById('cmsg'), explain(e), 'err');
           });
