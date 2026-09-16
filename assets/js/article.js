@@ -50,7 +50,14 @@
     if (a.sponsored) head.appendChild(el('p', { class: 'notice', text: 'Sponsored content. Produced with commercial support and reviewed to the same standards.' }));
 
     body.innerHTML = '';
-    if (a.summary) body.appendChild(el('p', { class: 'standfirst', text: a.summary }));
+    if (a.summary) body.appendChild(Marks.into(el('p', { class: 'standfirst' }), a.summary));
+    if (a.corrected_at) {
+      // A correction nobody can see is not a correction.
+      body.appendChild(el('p', { class: 'corrected' }, [
+        el('strong', { text: 'Corrected ' + Site.fmtDate(a.corrected_at) }),
+        a.correction_note ? el('span', { text: ' — ' + a.correction_note }) : null
+      ]));
+    }
     (a.blocks || []).forEach(function (b, i) { var n = block(b, i); if (n) body.appendChild(n); });
 
     buildToc();
@@ -60,22 +67,25 @@
 
   function block(b, i) {
     switch (b.type) {
-      case 'h2': return el('h2', { id: 's' + i, text: b.text });
-      case 'h3': return el('h3', { id: 's' + i, text: b.text });
-      case 'p':  return el('p', { text: b.text });
-      case 'quote': return el('blockquote', { text: b.text });
-      case 'list': return el(b.ordered ? 'ol' : 'ul', {}, (b.items || []).map(function (t) { return el('li', { text: t }); }));
+      // Marks are turned into elements, never into HTML strings: a paragraph
+      // containing <script> stays a paragraph containing those characters.
+      case 'h2': return Marks.into(el('h2', { id: 's' + i }), b.text);
+      case 'h3': return Marks.into(el('h3', { id: 's' + i }), b.text);
+      case 'p':  return Marks.into(el('p', {}), b.text);
+      case 'quote': return Marks.into(el('blockquote', {}), b.text);
+      case 'list': return el(b.ordered ? 'ol' : 'ul', {},
+        (b.items || []).map(function (t) { return Marks.into(el('li', {}), t); }));
       case 'figure': {
         var media = b.src
           ? el('img', { src: b.src, alt: b.alt || b.caption || '', loading: 'lazy', decoding: 'async' })
           : el('div', { class: 'figph', role: 'img', 'aria-label': b.caption || 'Figure' });
-        return el('figure', {}, [media, b.caption ? el('figcaption', { text: b.caption }) : null]);
+        return el('figure', {}, [media, b.caption ? Marks.into(el('figcaption', {}), b.caption) : null]);
       }
       case 'table': return table(b);
       case 'equation': return el('p', { class: 'eq', text: b.tex || b.text });
       case 'references': return el('div', {}, [
         el('h2', { id: 'refs', text: 'References' }),
-        el('ol', { class: 'refs' }, (b.items || []).map(function (t) { return el('li', { text: t }); }))
+        el('ol', { class: 'refs' }, (b.items || []).map(function (t) { return Marks.into(el('li', {}), t); }))
       ]);
       case 'ad': return el('div', { class: 'adslot', 'data-ad': b.placement || 'ARTICLE_MIDDLE' });
       default: return null;
