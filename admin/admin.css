@@ -359,3 +359,42 @@ td button { padding: .35rem .6rem; font-size: .75rem; }
 @media (prefers-reduced-motion: reduce) {
   .topbar h1.is-checking::after { animation: none; opacity: .6; }
 }
+
+/* ---------- formatting controls on the desk ---------- */
+
+.marks { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin: .4rem 0 .35rem; }
+.marks__btn {
+  font: inherit; font-size: .78125rem; line-height: 1; min-width: 2rem;
+  background: var(--surface); border: 1px solid var(--rule-strong); color: var(--ink);
+  border-radius: 4px; padding: .38rem .55rem; cursor: pointer;
+}
+.marks__btn:hover { border-color: var(--accent); color: var(--accent); }
+.marks__btn.is-bold { font-weight: 800; }
+.marks__btn.is-italic { font-style: italic; }
+.marks__tone { width: auto; max-width: 9rem; font-size: .78125rem; padding: .35rem .5rem; }
+.marks__gap { flex: 1; }
+
+#view textarea[data-field] {
+  min-height: 16rem; font-size: 1rem; line-height: 1.7; padding: .9rem 1rem;
+  font-family: Charter, "Iowan Old Style", Georgia, serif;
+}
+.preview {
+  margin: .4rem 0 1rem; padding: .75rem .95rem;
+  border-left: 3px solid var(--accent); background: var(--paper);
+  font-family: Charter, "Iowan Old Style", Georgia, serif; line-height: 1.65;
+}
+.preview .tone--accent { color: var(--accent); }
+.preview .tone--warn { color: var(--warn); }
+.preview .tone--muted { color: var(--muted); }
+.preview .size--lead { font-size: 1.1em; }
+.preview .size--note { font-size: .875em; }
+.preview mark { background: var(--accent-soft); }
+
+/* One field, the whole screen. */
+body.writing-full { overflow: hidden; }
+#view textarea.is-full {
+  position: fixed; inset: 0; z-index: 60; background: var(--surface);
+  max-width: none; border: 0; border-radius: 0;
+  padding: clamp(1.5rem, 6vw, 4rem) clamp(1rem, 12vw, 10rem);
+  font-size: 1.1rem; line-height: 1.75;
+}
