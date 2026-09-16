@@ -3,46 +3,114 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#13212E">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="robots" content="noindex, nofollow">
-<title>Author portal</title>
-<link rel="stylesheet" href="author.css">
+<title>S360 Editorial Studio</title>
+<link rel="icon" href="../assets/icons/logo-mark.svg">
+<link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<div id="login" class="login">
-  <h1>Author portal</h1>
-  <label for="email">Email</label>
-  <input id="email" type="email" autocomplete="username">
-  <label for="password">Password</label>
-  <input id="password" type="password" autocomplete="current-password">
-  <label for="mfa">Authentication code <span class="hint">(if enabled)</span></label>
-  <input id="mfa" inputmode="numeric" autocomplete="one-time-code">
-  <div class="btnrow"><button class="act" id="signin" type="button">Sign in</button></div>
-  <div id="loginmsg"></div>
-  <p class="hint">Accounts here are created from an invitation. If you have one, open the link in your email.</p>
+<!-- Sign in -->
+<div id="login" class="signin">
+
+  <!-- The half of the screen that says whose studio this is. -->
+  <div class="signin__stage" aria-hidden="true">
+    <div class="signin__stageinner">
+      <img class="signin__mark" src="../assets/icons/logo-mark.svg" alt="" width="84" height="84">
+      <p class="signin__lede">Sustainable Science,<br>Technology &amp; Solutions&nbsp;360</p>
+      <p class="signin__rule"></p>
+      <p class="signin__motto">Create &middot; Curate &middot; Publish &middot; Connect</p>
+    </div>
+  </div>
+
+  <div class="signin__panel">
+    <div class="signin__card">
+      <div class="signin__brand">
+        <img src="../assets/icons/logo-mark.svg" alt="" width="44" height="44">
+        <div>
+          <strong>S360 Editorial Studio</strong>
+          <span>Sign in to continue</span>
+        </div>
+      </div>
+
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" autofocus>
+
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password">
+
+      <!-- Shown only when the engine asks for it: most people have no code to
+           type, and a box they must ignore is a box that makes them hesitate. -->
+      <div id="mfarow" class="hidden">
+        <label for="mfa">Authentication code</label>
+        <input id="mfa" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+               placeholder="6 digits from your app">
+      </div>
+
+      <div class="rowbtns"><button class="act" id="signin" type="button">Sign in</button></div>
+      <div id="loginmsg"></div>
+      <p class="signin__foot">Trouble signing in? Ask your supervisor admin to reset it.</p>
+    </div>
+  </div>
 </div>
 
-<div id="app" class="hidden">
-  <header class="top">
-    <div class="bar">
-      <div class="brand">Author portal<small id="who"></small></div>
+<!-- The tool -->
+<div id="app" class="app hidden">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__head">
+      <img src="../assets/icons/logo-mark.svg" alt="" width="26" height="26">
+      <div class="sidebar__title">
+        <strong>S360 Editorial Studio</strong>
+        <span class="tagline">Create &middot; Curate &middot; Publish &middot; Connect</span>
+        <span class="env" id="env"></span>
+      </div>
+      <button class="iconbtn sidebar__close" id="navclose" type="button" aria-label="Close menu">&times;</button>
+    </div>
+
+    <div class="sidebar__search">
+      <input id="navsearch" type="search" placeholder="Search screens&hellip;" aria-label="Search screens"
+             autocomplete="off" spellcheck="false">
+      <kbd>Ctrl K</kbd>
+    </div>
+
+    <nav id="nav" aria-label="Sections"></nav>
+
+    <div class="sidebar__foot">
+      <div class="who" id="who"></div>
       <button class="ghost" id="signout" type="button">Sign out</button>
     </div>
-    <nav class="tabs" id="tabs">
-      <button data-view="dashboard" class="is-active">Dashboard</button>
-      <button data-view="articles">My articles</button>
-      <button data-view="new">New article</button>
-      <button data-view="guidelines">Guidelines</button>
-      <button data-view="profile">Profile</button>
-      <button data-view="notifications">Notifications<span class="badge hidden" id="nbadge">0</span></button>
-    </nav>
-  </header>
-  <main id="view"></main>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="iconbtn topbar__menu" id="navopen" type="button" aria-label="Open menu">&#9776;</button>
+      <h1 id="viewtitle">Dashboard</h1>
+      <div class="topbar__right">
+        <a class="ghost" href="../" target="_blank" rel="noopener">View the site</a>
+      </div>
+    </header>
+    <main id="view" tabindex="-1"></main>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
 </div>
 
-<script src="../admin/config.js"></script>
+<script src="config.js"></script>
 <script src="../assets/js/api.js"></script>
-<script src="author.js"></script>
+<script src="../assets/js/marks.js"></script>
+<script src="../assets/js/marks-ui.js"></script>
+<script src="editorial.js"></script>
+<script src="rulebook.js"></script>
+<script src="siteadmin.js"></script>
+<script src="ads-admin.js"></script>
+<script src="comms.js"></script>
+<script src="issues-admin.js"></script>
+<script src="performance.js"></script>
+<script src="billing.js"></script>
+<script src="email.js"></script>
+<script src="published.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>
