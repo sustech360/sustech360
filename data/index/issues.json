@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "generated_at": "2026-09-16T17:29:30.693Z",
+  "issues": [
+    {
+      "number": 1,
+      "slug": "issue-1",
+      "title": "Issue 1",
+      "theme": "",
+      "month": "",
+      "year": 2026,
+      "cover": "",
+      "pdf": "issues/issue-1.pdf",
+      "published_at": "2026-09-16T17:29:27.694Z"
+    }
+  ]
+}
