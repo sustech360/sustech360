@@ -560,3 +560,48 @@ a.badge:hover { text-decoration: none; background: var(--accent); color: var(--p
   .nav { background: color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter: blur(8px); }
 }
 @media (display-mode: standalone) { .nav { top: env(safe-area-inset-top); } }
+
+/* ---------- named tones and sizes inside a paragraph ----------
+   A colour picker in an article editor produces a publication where every
+   writer has their own red. These resolve to the house palette, so they stay
+   legible in dark mode, survive a change of brand colour, and print. */
+
+.tone--accent { color: var(--accent); }
+.tone--warn   { color: #A8382A; }
+.tone--muted  { color: var(--muted); }
+[data-theme="dark"] .tone--warn { color: #E08472; }
+
+.size--lead { font-size: 1.15em; line-height: 1.45; }
+.size--note { font-size: .875em; color: var(--muted); }
+
+mark {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: inherit;
+  padding: 0 .15em;
+  border-radius: 2px;
+}
+@supports not (color: color-mix(in srgb, red 10%, white)) {
+  mark { background: #EAF3F0; }
+}
+.article__body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .9em;
+  background: var(--surface, rgba(0,0,0,.04));
+  padding: .05em .3em;
+  border-radius: 3px;
+}
+.article__body sup, .article__body sub { line-height: 0; font-size: .75em; }
+
+/* ---------- the styles a writer can apply ---------- */
+
+mark { background: color-mix(in srgb, var(--accent) 16%, transparent); color: inherit; padding: 0 .15em; }
+.article__body code { font-family: var(--mono, ui-monospace, monospace); font-size: .9em; }
+.article__body sup, .article__body sub { line-height: 0; font-size: .75em; }
+
+/* A published page that has been corrected says so, above the text. */
+.corrected {
+  font-family: var(--sans); font-size: .8125rem; color: var(--sponsor, #8A6A1F);
+  border-left: 3px solid var(--sponsor, #8A6A1F); padding: .5rem .75rem;
+  background: color-mix(in srgb, var(--sponsor, #8A6A1F) 7%, transparent);
+  margin: 0 0 1.5rem;
+}
