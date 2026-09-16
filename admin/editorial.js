@@ -53,6 +53,11 @@ window.ADMIN_EXTRA_VIEWS = function (ctx) {
       var d = r[0], candidates = r[1];
       var a = d.article, fields = d.content.fields || {};
 
+      // A version still being worked on may be corrected. One that has gone to
+      // the supervisor, or is already public, is left alone.
+      var openForEditing = ['DRAFT', 'REVISION_REQUIRED', 'SUBMITTED', 'RESUBMITTED',
+                            'IN_REVIEW', 'REVIEWED'].indexOf(d.version_status) !== -1;
+
       v.innerHTML =
         '<h2>' + esc(a.title) + '</h2>' +
         '<div class="card"><p class="hint">' + esc(a.id) + ' · ' + esc(a.category) + ' · ' + esc(a.format) +
@@ -62,10 +67,23 @@ window.ADMIN_EXTRA_VIEWS = function (ctx) {
         (d.notes ? '<p class="hint">Last note: ' + esc(d.notes) + '</p>' : '') +
         '<div class="rowbtns" id="moves"></div><div id="movemsg"></div></div>' +
 
+        // An editor can correct the text here, with the same controls the author
+        // had. Whether they may is the engine's decision, not this screen's:
+        // the save is refused if they may not.
         '<div class="card"><h2>Text</h2>' +
-        Object.keys(fields).map(function (k) {
-          return '<h3 class="hint">' + esc(k) + '</h3><p>' + esc(fields[k]).replace(/\n/g, '<br>') + '</p>';
-        }).join('') + '</div>' +
+        (openForEditing
+          ? '<p class="hint">You are editing the working version. The live article does not change ' +
+            'until this is approved and published.</p>' +
+            Object.keys(fields).map(function (k) {
+              return '<label for="ed-' + esc(k) + '">' + esc(k) + '</label>' +
+                '<textarea id="ed-' + esc(k) + '" data-field="' + esc(k) + '" rows="10">' + esc(fields[k]) + '</textarea>';
+            }).join('') +
+            '<div class="rowbtns"><button class="act" id="savetext">Save the text</button>' +
+            '<span class="hint" id="savestate"></span></div><div id="textmsg"></div>'
+          : Object.keys(fields).map(function (k) {
+              return '<h3 class="hint">' + esc(k) + '</h3><p>' + esc(fields[k]).replace(/\n/g, '<br>') + '</p>';
+            }).join('')) +
+        '</div>' +
 
         (d.media && d.media.length ? '<div class="card"><h2>Figures</h2><table><tbody>' +
           d.media.map(function (m) {
@@ -93,6 +111,33 @@ window.ADMIN_EXTRA_VIEWS = function (ctx) {
             '<td>' + (h.status === 'ARCHIVED' || h.status === 'PUBLISHED'
               ? '<button class="ghost" data-rollback="' + h.version + '">Put back on the site</button>' : '') + '</td></tr>';
         }).join('') + '</tbody></table></div>';
+
+      if (openForEditing && window.MarksUI) {
+        var pending = {};
+        MarksUI.attach(v, {
+          onChange: function (field, value) {
+            pending[field] = value;
+            var state = document.getElementById('savestate');
+            if (state) state.textContent = 'Not saved yet';
+          }
+        });
+        document.getElementById('savetext').addEventListener('click', function () {
+          var state = document.getElementById('savestate');
+          if (!Object.keys(pending).length) { if (state) state.textContent = 'Nothing changed'; return; }
+          if (state) state.textContent = 'Saving…';
+          // One request carrying everything the editor touched, merged field by
+          // field so an author working at the same time is not overwritten.
+          api.call('syncDraft', { article_id: a.id, changes: { fields: pending } })
+            .then(function (r) {
+              pending = {};
+              if (state) state.textContent = 'Saved ' + new Date(r.saved_at).toLocaleTimeString();
+            })
+            .catch(function (e) {
+              if (state) state.textContent = '';
+              message(document.getElementById('textmsg'), explain(e), 'err');
+            });
+        });
+      }
 
       var moves = document.getElementById('moves');
       d.available.forEach(function (m) {
