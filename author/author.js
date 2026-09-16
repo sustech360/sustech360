@@ -234,6 +234,11 @@
         current = data;
         var a = data.article;
         var format = bundle.formats.filter(function (f) { return f.slug === a.format; })[0] || { fields: [], words: {} };
+        // Kept so the Word importer knows which sections this format has.
+        // This used to run a line before `a` existed, which threw on every
+        // attempt to open the editor: var hoisting makes that a TypeError
+        // rather than the error anyone would expect.
+        current.fields = format.fields || [];
         var editable = ['DRAFT', 'REVISION_REQUIRED'].indexOf(data.version_status) !== -1;
 
         v.innerHTML =
@@ -252,7 +257,12 @@
             var val = (data.content.fields || {})[f.field] || '';
             return '<label for="f-' + esc(f.field) + '">' + esc(f.label) + (f.required ? '' : ' <span class="hint">optional</span>') + '</label>' +
               (f.help ? '<p class="hint">' + esc(f.help) + '</p>' : '') +
-              '<textarea id="f-' + esc(f.field) + '" data-field="' + esc(f.field) + '"' + (editable ? '' : ' disabled') + '>' + esc(val) + '</textarea>';
+              (editable ? toolbar(f.field) : '') +
+              '<div class="writingbox" id="box-' + esc(f.field) + '">' +
+              '<textarea id="f-' + esc(f.field) + '" data-field="' + esc(f.field) + '" rows="16"' +
+              (editable ? '' : ' disabled') + '>' + esc(val) + '</textarea>' +
+              '<div class="writingbox__foot"><span class="hint" id="pv-' + esc(f.field) + '"></span></div>' +
+              '</div>';
           }).join('') +
           '<h2>Figures</h2><div id="media"></div>' +
           (editable ? mediaForm() : '') +
@@ -295,6 +305,7 @@
               countWords();
             });
           });
+          wireMarks(v);
           $('save').addEventListener('click', function () { save(true); });
           $('submit').addEventListener('click', openChecklist);
           // A long sitting still reaches the engine even without a pause.
@@ -554,8 +565,79 @@
     if (document.visibilityState === 'hidden' && dirty) { collectInto(pending); sync(false); }
   });
 
+  /** The submission window asks how the article was written before anything
+   *  else, because the answer changes what the rest of the window is for. */
   function openChecklist() {
     save(true).then(function () {
+      $('e-msg').innerHTML = '<div class="msg"><strong>How did you write this?</strong>' +
+        '<div class="btnrow">' +
+        '<button class="act" id="how-here" type="button">I wrote it here</button>' +
+        '<button class="ghost" id="how-word" type="button">I wrote it in Word</button>' +
+        '<button class="ghost" id="how-not" type="button">Not yet</button></div></div>';
+      $('how-not').addEventListener('click', function () { $('e-msg').innerHTML = ''; });
+      $('how-here').addEventListener('click', showChecklist);
+      $('how-word').addEventListener('click', showWordImport);
+    }).catch(function () {});
+  }
+
+  /** Reading the Word file happens in this browser. The file is never uploaded:
+   *  what reaches the engine is the text, with its bold and italics kept as
+   *  marks, exactly as if it had been typed. */
+  function showWordImport() {
+    if (!Docx.supported()) {
+      $('e-msg').innerHTML = '<div class="msg err">This browser cannot open Word files. ' +
+        'Copy the text from Word and paste it into the sections instead — bold and italics ' +
+        'can be reapplied with the buttons above each box.</div>';
+      return;
+    }
+    $('e-msg').innerHTML = '<div class="msg"><strong>Open your Word file</strong>' +
+      '<p class="hint">The file stays on this computer. We read the words, keep the bold, italics, ' +
+      'superscripts and subscripts, and put them into the sections below. Headings that match a ' +
+      'section name are used to split it up.</p>' +
+      '<input type="file" id="docx" accept=".docx">' +
+      '<div id="docx-report"></div>' +
+      '<div class="btnrow"><button class="ghost" id="docx-back" type="button">Back</button></div></div>';
+    $('docx-back').addEventListener('click', openChecklist);
+    $('docx').addEventListener('change', function () {
+      var file = this.files && this.files[0];
+      if (!file) return;
+      if (!/\.docx$/i.test(file.name)) {
+        $('docx-report').innerHTML = '<div class="msg err">That is not a .docx file. ' +
+          'In Word: File, Save As, Word Document.</div>';
+        return;
+      }
+      $('docx-report').innerHTML = '<p class="hint">Reading…</p>';
+      Docx.read(file).then(function (doc) {
+        var fields = (current && current.fields) || [];
+        var mapped = Docx.toFields(doc.paragraphs, fields);
+        var filled = Object.keys(mapped);
+        if (!filled.length) {
+          $('docx-report').innerHTML = '<div class="msg err">Nothing came out of that file. ' +
+            'If it is mostly text boxes or images, paste the text in instead.</div>';
+          return;
+        }
+        filled.forEach(function (key) {
+          var box = document.getElementById('f-' + key);
+          if (!box) return;
+          box.value = mapped[key];
+          changed(key, box.value);
+        });
+        countWords();
+        $('docx-report').innerHTML = '<div class="msg ok"><strong>Read ' + doc.paragraphs.length +
+          ' paragraphs into ' + filled.length + ' section' + (filled.length === 1 ? '' : 's') + '.</strong>' +
+          '<p class="hint">Left behind: ' + esc(doc.dropped.join('; ')) + '.</p>' +
+          '<p class="hint">Check the sections below read correctly, then carry on.</p>' +
+          '<div class="btnrow"><button class="act" id="after-word" type="button">Looks right — submit</button></div></div>';
+        $('after-word').addEventListener('click', function () { save(true).then(showChecklist); });
+      }).catch(function (e) {
+        $('docx-report').innerHTML = '<div class="msg err">' + esc(e.message || 'That file could not be read.') +
+          ' You can always paste the text in instead.</div>';
+      });
+    });
+  }
+
+  function showChecklist() {
+    {
       $('e-msg').innerHTML = '<div class="msg"><strong>Before you submit</strong>' +
         bundle.checklist.map(function (c) {
           return '<div class="check"><input type="checkbox" id="c-' + esc(c.id) + '" data-check="' + esc(c.id) + '">' +
@@ -582,10 +664,119 @@
             btn.disabled = false;
           });
       });
-    }).catch(function () {});
+    }
   }
 
   /* ---------------- media ---------------- */
+
+  /* ---- marks ----
+   * A short row of buttons that wrap what is selected. The text stays text —
+   * which is what goes to the search index, the feed, the newsletter and the
+   * PDF — and the same marks render everywhere.
+   */
+
+  var MARKS = [
+    { key: 'b', open: '**', label: 'B',   title: 'Bold  (Ctrl+B)',       css: 'is-bold' },
+    { key: 'i', open: '*',  label: 'I',   title: 'Italic  (Ctrl+I)',     css: 'is-italic' },
+    { key: 'h', open: '==', label: 'HL',  title: 'Highlight' },
+    { key: 'x', open: '^',  label: 'X²',  title: 'Superscript — Na^+^' },
+    { key: 'z', open: '~',  label: 'X₂',  title: 'Subscript — CO~2~' },
+    { key: 'c', open: '`',  label: '{ }', title: 'Code or a formula' }
+  ];
+
+  function toolbar(field) {
+    return '<div class="marks" data-for="' + esc(field) + '">' +
+      MARKS.map(function (m) {
+        return '<button type="button" class="marks__btn ' + (m.css || '') + '" data-mark="' + esc(m.open) +
+          '" data-field="' + esc(field) + '" title="' + esc(m.title) + '">' + m.label + '</button>';
+      }).join('') +
+      '<button type="button" class="marks__btn" data-link="' + esc(field) + '" title="Link">Link</button>' +
+      '<span class="marks__gap"></span>' +
+      '<button type="button" class="marks__btn" data-preview="' + esc(field) + '" title="See how it will read">Preview</button>' +
+      '<button type="button" class="marks__btn" data-expand="' + esc(field) + '" title="Fill the screen (Esc to come back)">Expand</button>' +
+      '</div>';
+  }
+
+  /** Wraps the selection, or drops the marks in ready to type between. */
+  function wrap(field, open, close) {
+    var box = document.getElementById('f-' + field);
+    if (!box) return;
+    close = close || open;
+    var from = box.selectionStart, to = box.selectionEnd;
+    var chosen = box.value.slice(from, to);
+    box.value = box.value.slice(0, from) + open + chosen + close + box.value.slice(to);
+    box.focus();
+    if (chosen) box.setSelectionRange(from, to + open.length + close.length);
+    else box.setSelectionRange(from + open.length, from + open.length);
+    changed(field, box.value);
+    countWords();
+  }
+
+  function wireMarks(scope) {
+    scope.querySelectorAll('[data-mark]').forEach(function (b) {
+      b.addEventListener('click', function () { wrap(b.getAttribute('data-field'), b.getAttribute('data-mark')); });
+    });
+    scope.querySelectorAll('[data-link]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var field = b.getAttribute('data-link');
+        var box = document.getElementById('f-' + field);
+        var chosen = box.value.slice(box.selectionStart, box.selectionEnd) || 'these words';
+        var url = prompt('Link to (an https address):', 'https://');
+        if (!url || !Marks.safeHref(url)) {
+          if (url) alert('Links must be https, or a page on this site.');
+          return;
+        }
+        var from = box.selectionStart, to = box.selectionEnd;
+        box.value = box.value.slice(0, from) + '[' + chosen + '](' + url + ')' + box.value.slice(to);
+        changed(field, box.value);
+      });
+    });
+    scope.querySelectorAll('[data-preview]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var field = b.getAttribute('data-preview');
+        var box = document.getElementById('f-' + field);
+        var foot = document.getElementById('pv-' + field);
+        if (!foot) return;
+        if (foot.dataset.on === '1') { foot.dataset.on = '0'; foot.textContent = ''; return; }
+        foot.dataset.on = '1';
+        foot.className = 'preview';
+        Marks.into(foot, box.value.split(/\n{2,}/)[0] || '');
+      });
+    });
+    scope.querySelectorAll('[data-expand]').forEach(function (b) {
+      b.addEventListener('click', function () { expand(b.getAttribute('data-expand')); });
+    });
+
+    // Ctrl+B and Ctrl+I, because everyone's hands already know them.
+    scope.querySelectorAll('textarea').forEach(function (box) {
+      box.addEventListener('keydown', function (e) {
+        if (!(e.ctrlKey || e.metaKey)) return;
+        var key = e.key.toLowerCase();
+        var mark = key === 'b' ? '**' : (key === 'i' ? '*' : null);
+        if (!mark) return;
+        e.preventDefault();
+        wrap(box.getAttribute('data-field'), mark);
+      });
+    });
+  }
+
+  /** One field, the whole screen. Escape comes back. */
+  function expand(field) {
+    var box = document.getElementById('box-' + field);
+    if (!box) return;
+    var on = box.classList.toggle('is-full');
+    document.body.classList.toggle('writing-full', on);
+    var area = document.getElementById('f-' + field);
+    if (on && area) area.focus();
+    if (on && !expand.bound) {
+      expand.bound = true;
+      addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.writingbox.is-full').forEach(function (n) { n.classList.remove('is-full'); });
+        document.body.classList.remove('writing-full');
+      });
+    }
+  }
 
   function mediaForm() {
     return '<div class="panel"><div class="row">' +
